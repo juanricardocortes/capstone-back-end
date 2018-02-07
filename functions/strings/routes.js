@@ -18,7 +18,8 @@ module.exports = {
         updateApplicant: "/updateApplicant",
         archiveApplicant: "/archiveApplicant",
         unarchiveApplicant: "/unarchiveApplicant",
-        getApplicants: "/getApplicants"
+        getApplicants: "/getApplicants",
+        uploadImage: "/uploadImage",
     },
     projects: {
         addProject: "/addProject",

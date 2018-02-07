@@ -62,9 +62,11 @@ module.exports = {
                         duplicateEmails.push(applicant[index]);
                     } else {
                         var referenceNumber = Math.floor(100000 + Math.random() * 900000);
-                        var key = ref.push().key;
+                        var key = applicant[index].userkey;
                         ref.child(key).update({
                             email: applicant[index].email,
+                            lastname: applicant[index].lastname,
+                            firstname: applicant[index].firstname,
                             userkey: key,
                             referenceNumber: referenceNumber,
                             isArchived: false,
@@ -149,6 +151,22 @@ module.exports = {
             admin.database(appdb).ref(database.main + database.applicants).once("value").then(function (applicants) {
                 response.send(iterate([applicants.val()]));
             })
+        }
+    },
+    uploadImage: function (request, response) {
+        try {
+            admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update({
+                image: request.body.downloadURL
+            });
+            response.send({
+                success: true,
+                message: "Image for " + request.body.email + " successfully uploaded"
+            });
+        } catch (err) {
+            console.log(err.message);
+            response.send({
+                message: err.message
+            });
         }
     }
 }
