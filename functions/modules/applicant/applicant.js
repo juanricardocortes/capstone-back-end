@@ -49,7 +49,7 @@ module.exports = {
             }
         */
         var decoded = jwt.decode(request.body.token);
-        var applicant = request.body.applicants;
+        var applicant = request.body.allApplicants;
         if (decoded.isAdmin) {
             var ref = admin.database(appdb).ref(database.main + database.applicants);
             ref.once('value').then(function (snapshot) {
