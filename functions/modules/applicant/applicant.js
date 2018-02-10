@@ -71,9 +71,16 @@ module.exports = {
                             referenceNumber: referenceNumber,
                             isArchived: false,
                             requirements: {
-                                reqOne: false,
-                                reqTwo: false,
-                                reqThree: false
+                                reqOne: {
+                                    key: "reqOne",
+                                    name: "Birth Certificate",
+                                    status: "incomplete"
+                                },
+                                reqTwo: {
+                                    key: "reqTwo",
+                                    name: "Valid ID",
+                                    status: "incomplete"
+                                }
                             }
                         });
                     }
@@ -90,18 +97,25 @@ module.exports = {
         }
     },
     archiveApplicant: function (request, response) {
-        var decoded = request.body.token;
+        /*
+            {
+                token: token,
+                userkey: userkey,
+                email: email
+            }
+        */
+        var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
             if (!request.body.isArchived) {
                 admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update({
                     isArchived: true
                 });
                 response.send({
-                    message: "Archived successful"
+                    message: "Archived successful: " + request.body.email
                 });
             } else {
                 response.send({
-                    message: "Already archived"
+                    message: "Already archived: " + request.body.email
                 });
             }
         } else {
@@ -111,7 +125,13 @@ module.exports = {
         }
     },
     unarchiveApplicant: function (request, response) {
-        var decoded = request.body.token;
+        /*
+            {
+                token: token,
+                userkey: userkey
+            }
+        */
+        var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
             if (request.body.isArchived) {
                 admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update({
@@ -132,7 +152,7 @@ module.exports = {
         }
     },
     updateApplicant: function (request, response) {
-        var decoded = request.body.token;
+        var decoded = jwt.decode(request.body.token);
         var user = request.body.user;
         if (decoded.isAdmin) {
             admin.database(appdb).ref(database.main + database.applicants + user.userkey).update(user);
@@ -166,6 +186,27 @@ module.exports = {
             console.log(err.message);
             response.send({
                 message: err.message
+            });
+        }
+    },
+    updateRequirements: function (request, response) {
+        /*
+            {
+                token: token,
+                applicantKey: applicantKey,
+                requirementKey: requirementKey,
+                status: status
+            }
+        */
+        var req = request.body;
+        var decoded = jwt.decode(request.body.token);
+        if (decoded.isAdmin) {
+            admin.database(appdb).ref(database.main + database.applicants + req.applicantKey + database.applicant.requirements + req.requirementKey)
+                .update({
+                    status: req.status
+                });
+            response.send({
+                message: "Requirement updated"
             });
         }
     }

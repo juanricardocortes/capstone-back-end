@@ -20,6 +20,7 @@ module.exports = {
         unarchiveApplicant: "/unarchiveApplicant",
         getApplicants: "/getApplicants",
         uploadImage: "/uploadImage",
+        updateRequirements: "/updateRequirements"
     },
     projects: {
         addProject: "/addProject",

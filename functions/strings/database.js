@@ -7,6 +7,9 @@ module.exports = {
         leaves: "leaves/"
     },
     applicants: "Applicants/",
+    applicant: {
+        requirements: "/requirements/"
+    },
     projects: "Projects/",
     project: {
         members: "/members/",

@@ -105,7 +105,7 @@ module.exports = {
             }
         });
     },
-    cancelAuth: function(request, response) {
+    cancelAuth: function (request, response) {
         var user = request.body.user;
         admin.database(authdb).ref(database.main + database.employees + user.userkey).update({
             pin: null
