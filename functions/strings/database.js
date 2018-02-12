@@ -23,5 +23,11 @@ module.exports = {
     leaves: "Leaves/",
     leave: {
         dates: "dates/"
+    },
+    notifications: {
+        applicants: "Notifications/Applicants/",
+        employees: "Notifications/Employees/",
+        projects: "Notifications/Projects/",
+        leaves: "Notifications/Leaves"
     }
 }

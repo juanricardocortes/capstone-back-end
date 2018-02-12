@@ -56,6 +56,7 @@ module.exports = {
                 var duplicateEmails = [];
                 var allEmails = getEmail(iterate([snapshot.val()]));
                 for (var index = 0; index < applicant.length; index++) {
+                    var time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
                     if (containsObject({
                             email: applicant[index].email
                         }, allEmails)) {
@@ -70,6 +71,7 @@ module.exports = {
                             userkey: key,
                             referenceNumber: referenceNumber,
                             isArchived: false,
+                            completion: "0%",
                             requirements: {
                                 reqOne: {
                                     key: "reqOne",
@@ -82,6 +84,14 @@ module.exports = {
                                     status: "incomplete"
                                 }
                             }
+                        });
+                        admin.database(appdb).ref(database.main + database.notifications.applicants + key).update({
+                            applicant: applicant[index],
+                            key: key,
+                            time: time,
+                            seen: false,
+                            message: "Added: " + applicant[index].email,
+                            icon: "priority_high"
                         });
                     }
                 }
@@ -100,22 +110,34 @@ module.exports = {
         /*
             {
                 token: token,
-                userkey: userkey,
-                email: email
+                applicant: applicant
             }
         */
         var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
-            if (!request.body.isArchived) {
-                admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update({
-                    isArchived: true
+            var applicants = request.body.applicant;
+            for (var index = 0; index < applicants.length; index++) {
+                var time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
+                admin.database(appdb).ref(database.main + database.applicants + applicants[index].userkey).update({
+                    isArchived: request.body.isArchived
+                });
+                var key = admin.database(appdb).ref().push().key;
+                var message;
+                if (!request.body.isArchived) {
+                    message = "Unarchived: " + applicants[index].email
+                } else {
+                    message = "Archived: " + applicants[index].email;
+                }
+                admin.database(appdb).ref(database.main + database.notifications.applicants + key).update({
+                    applicant: applicants[index],
+                    key: applicants[index].userkey,
+                    time: time,
+                    seen: false,
+                    message: message,
+                    icon: "priority_high"
                 });
                 response.send({
-                    message: "Archived successful: " + request.body.email
-                });
-            } else {
-                response.send({
-                    message: "Already archived: " + request.body.email
+                    message: message
                 });
             }
         } else {
