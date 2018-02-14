@@ -72,6 +72,7 @@ module.exports = {
                             referenceNumber: referenceNumber,
                             isArchived: false,
                             completion: "0%",
+                            hired: false,
                             requirements: {
                                 reqOne: {
                                     key: "reqOne",
@@ -119,54 +120,27 @@ module.exports = {
             for (var index = 0; index < applicants.length; index++) {
                 var time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
                 admin.database(appdb).ref(database.main + database.applicants + applicants[index].userkey).update({
-                    isArchived: request.body.isArchived
+                    isArchived: (applicants[index].isArchived) 
                 });
                 var key = admin.database(appdb).ref().push().key;
                 var message;
-                if (!request.body.isArchived) {
-                    message = "Unarchived: " + applicants[index].email
-                } else {
-                    message = "Archived: " + applicants[index].email;
-                }
+                // if (!applicants[index].isArchived) {
+                //     message = "Unarchived: " + applicants[index].email
+                // } else {
+                //     message = "Archived: " + applicants[index].email;
+                // }
                 admin.database(appdb).ref(database.main + database.notifications.applicants + key).update({
                     applicant: applicants[index],
                     key: applicants[index].userkey,
                     time: time,
                     seen: false,
-                    message: message,
+                    message: "Success",
                     icon: "priority_high"
                 });
-                response.send({
-                    message: message
-                });
             }
-        } else {
             response.send({
-                message: "Unauthorized access"
+                message: "Success"
             });
-        }
-    },
-    unarchiveApplicant: function (request, response) {
-        /*
-            {
-                token: token,
-                userkey: userkey
-            }
-        */
-        var decoded = jwt.decode(request.body.token);
-        if (decoded.isAdmin) {
-            if (request.body.isArchived) {
-                admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update({
-                    isArchived: false
-                });
-                response.send({
-                    message: "Unarchived successful"
-                });
-            } else {
-                response.send({
-                    message: "Already unarchived"
-                });
-            }
         } else {
             response.send({
                 message: "Unauthorized access"
@@ -230,6 +204,10 @@ module.exports = {
             response.send({
                 message: "Requirement updated"
             });
+        } else {
+            response.send({
+                message: "Unauthorized access"
+            })
         }
     }
 }

@@ -39,7 +39,6 @@ secureRoutes.route(routes.employee.getEmployees).post(cors(), employee.getEmploy
 
 secureRoutes.route(routes.applicant.addApplicant).post(cors(), applicant.addApplicant);
 secureRoutes.route(routes.applicant.archiveApplicant).post(cors(), applicant.archiveApplicant);
-secureRoutes.route(routes.applicant.unarchiveApplicant).post(cors(), applicant.unarchiveApplicant);
 secureRoutes.route(routes.applicant.updateApplicant).post(cors(), applicant.updateApplicant);
 secureRoutes.route(routes.applicant.getApplicants).post(cors(), applicant.getApplicants);
 secureRoutes.route(routes.applicant.uploadImage).post(cors(), applicant.uploadImage);

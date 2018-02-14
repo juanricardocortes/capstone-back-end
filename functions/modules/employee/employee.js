@@ -42,6 +42,18 @@ function getEmail(employees) {
 
 module.exports = {
     addEmployee: function (request, response) {
+        /*
+            {
+                token: token
+                employees: [
+                    {
+                        email: email,
+                        password: password
+                    }
+                ]
+            }
+        */
+    
         var decoded = jwt.decode(request.body.token);
         var employee = request.body.employees;
 
@@ -56,13 +68,20 @@ module.exports = {
                         }, allEmails)) {
                         duplicateEmails.push(employee[index]);
                     } else {
+                        var dateHired = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
                         var key = ref.push().key;
                         ref.child(key).update({
                             email: employee[index].email,
                             password: employee[index].password,
                             userkey: key,
                             isAdmin: false,
-                            isArchived: false
+                            isArchived: false,
+                            files: {
+                                datehired: dateHired,
+                                firstname: employee[index].firstname,
+                                lastname: employee[index].lastname,
+                                image: employee[index].image
+                            }
                         });
                     }
                 }
