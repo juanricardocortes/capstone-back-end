@@ -43,6 +43,7 @@ secureRoutes.route(routes.applicant.updateApplicant).post(cors(), applicant.upda
 secureRoutes.route(routes.applicant.getApplicants).post(cors(), applicant.getApplicants);
 secureRoutes.route(routes.applicant.uploadImage).post(cors(), applicant.uploadImage);
 secureRoutes.route(routes.applicant.updateRequirements).post(cors(), applicant.updateRequirements);
+secureRoutes.route(routes.applicant.applicantSendEmail).post(cors(), applicant.applicantSendEmail);
 
 secureRoutes.route(routes.projects.addProject).post(cors(), projects.addProject);
 secureRoutes.route(routes.projects.archiveProject).post(cors(), projects.archiveProject);
