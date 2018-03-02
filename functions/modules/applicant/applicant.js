@@ -41,6 +41,29 @@ function getEmail(applicants) {
     return emails;
 }
 
+function sendEmailToApplicant(email, text) {
+    nodemailer.createTestAccount((err, account) => {
+        var transporter = nodemailer.createTransport({
+            service: 'Gmail',
+            auth: {
+                user: constants.username,
+                pass: constants.password
+            }
+        });
+        var mailOptions = {
+            from: '"QWERTY" <noreply@gmail.com>',
+            to: email,
+            subject: 'WELTANCHAUNG: REFERENCE NUMBER',
+            text: text,
+        };
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                return console.log(error);
+            }
+        });
+    });
+}
+
 module.exports = {
     addApplicant: function (request, response) {
         /*
@@ -51,7 +74,6 @@ module.exports = {
         */
         var decoded = jwt.decode(request.body.token);
         var applicant = request.body.allApplicants;
-        var referenceNumbers = [];
         if (decoded.isAdmin) {
             var ref = admin.database(appdb).ref(database.main + database.applicants);
             ref.once('value').then(function (snapshot) {
@@ -65,8 +87,7 @@ module.exports = {
                         duplicateEmails.push(applicant[index]);
                     } else {
                         var referenceNumber = Math.floor(100000 + Math.random() * 900000);
-                        referenceNumbers.push(referenceNumber);
-
+                        sendEmailToApplicant(applicant[index].email, referenceNumber.toString());
                         var key = applicant[index].userkey;
                         ref.child(key).update({
                             email: applicant[index].email,
@@ -103,7 +124,6 @@ module.exports = {
                 response.send({
                     message: (applicant.length - duplicateEmails.length) + " applicant/s added",
                     duplicateEmails: duplicateEmails,
-                    referenceNumbers: referenceNumbers
                 });
             });
         } else {
@@ -213,51 +233,6 @@ module.exports = {
             response.send({
                 message: "Unauthorized access"
             })
-        }
-    },
-    applicantSendEmail: function (request, response) {
-        /*
-            {
-                token: token,
-                applicants: applicants,
-                referenceNumbers: referenceNumbers
-            }
-        */
-        var decoded = jwt.decode(request.body.token);
-        if (decoded.isAdmin) {
-            var applicants = request.body.applicants;
-            var referenceNumbers = request.body.referenceNumbers;
-            for (var index = 0; index < applicants.length; index++) {
-                var text = referenceNumbers[index];
-                var email = applicants[index];
-                nodemailer.createTestAccount((err, account) => {
-                    var transporter = nodemailer.createTransport({
-                        service: 'Gmail',
-                        auth: {
-                            user: constants.username,
-                            pass: constants.password
-                        }
-                    });
-                    var mailOptions = {
-                        from: '"QWERTY" <noreply@gmail.com>',
-                        to: email,
-                        subject: 'WELTANCHAUNG: Reference Number',
-                        text: text
-                    };
-                    transporter.sendMail(mailOptions, (error, info) => {
-                        if (error) {
-                            return console.log(error);
-                        }
-                    });
-                });
-            }
-            response.send({
-                message: "Reference number emailed to applicant"
-            });
-        } else {
-            response({
-                message: "Unauthorized access"
-            });
         }
     }
 }
