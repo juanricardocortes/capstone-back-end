@@ -83,7 +83,7 @@ module.exports = {
                                     image: employee[index].image
                                 }
                             });
-                            admin.database(empdb).ref(database.main + database.applicants + employee[index].applicantkey).update({
+                            admin.database(empdb).ref(database.main + database.employees + employee[index].userkey).update({
                                 hired: true,
                                 dateHired: dateHired
                             });

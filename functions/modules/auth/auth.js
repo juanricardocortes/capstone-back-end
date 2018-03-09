@@ -92,6 +92,7 @@ module.exports = {
                     expiresIn: 4000
                 });
                 response.send({
+                    user: snapshot.val(),
                     token: token,
                     valid: true
                 });
