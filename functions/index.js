@@ -28,7 +28,9 @@ app.route(routes.auth.authTwo).post(cors(), auth.authTwo);
 app.route(routes.auth.forgotPassword).post(cors(), auth.forgotPassword);
 app.route(routes.auth.cancelAuth).post(cors(), auth.cancelAuth);
 
+app.route(routes.middleware.validateToken).post(cors(), middleware.validateToken);
 secureRoutes.use(middleware.middleware);
+
 secureRoutes.route(routes.auth.changePassword).post(cors(), auth.changePassword);
 
 secureRoutes.route(routes.employee.addEmployee).post(cors(), employee.addEmployee);

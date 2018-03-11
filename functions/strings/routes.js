@@ -56,5 +56,8 @@ module.exports = {
             acceptLeaves: "/acceptLeaves",
             declineLeaves: "/declineLeaves"
         }
+    },
+    middleware: {
+        validateToken: "/api/validateToken"
     }
 }

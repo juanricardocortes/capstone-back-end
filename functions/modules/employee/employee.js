@@ -53,52 +53,46 @@ module.exports = {
                 ]
             }
         */
-    
+
         var decoded = jwt.decode(request.body.token);
         var employee = request.body.employees;
         if (decoded.isAdmin) {
-            if(request.body.hireFrom === "applicants"){
-                var ref = admin.database(empdb).ref(database.main + database.employees);
-                ref.once('value').then(function (snapshot) {
-                    var duplicateEmails = [];
-                    var allEmails = getEmail(iterate([snapshot.val()]));
-                    for (var index = 0; index < employee.length; index++) {
-                        if (containsObject({
-                                email: employee[index].email
-                            }, allEmails)) {
-                            duplicateEmails.push(employee[index]);
-                        } else {
-                            var dateHired = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-                            var key = ref.push().key;
-                            ref.child(key).update({
-                                email: employee[index].email,
-                                password: employee[index].password,
-                                userkey: key,
-                                isAdmin: false,
-                                isArchived: false,
-                                files: {
-                                    datehired: dateHired,
-                                    firstname: employee[index].firstname,
-                                    lastname: employee[index].lastname,
-                                    image: employee[index].image
-                                }
-                            });
-                            admin.database(empdb).ref(database.main + database.employees + employee[index].userkey).update({
-                                hired: true,
-                                dateHired: dateHired
-                            });
-                        }
+            var ref = admin.database(empdb).ref(database.main + database.employees);
+            ref.once('value').then(function (snapshot) {
+                var duplicateEmails = [];
+                var allEmails = getEmail(iterate([snapshot.val()]));
+                for (var index = 0; index < employee.length; index++) {
+                    if (containsObject({
+                            email: employee[index].email
+                        }, allEmails)) {
+                        duplicateEmails.push(employee[index]);
+                    } else {
+                        var dateHired = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
+                        var key = ref.push().key;
+                        ref.child(key).update({
+                            email: employee[index].email,
+                            password: employee[index].password,
+                            userkey: key,
+                            isAdmin: false,
+                            isArchived: false,
+                            files: {
+                                datehired: dateHired,
+                                firstname: employee[index].firstname,
+                                lastname: employee[index].lastname,
+                                image: employee[index].image
+                            }
+                        });
+                        admin.database(empdb).ref(database.main + database.employees + employee[index].userkey).update({
+                            hired: true,
+                            dateHired: dateHired
+                        });
                     }
-                    response.send({
-                        message: (employee.length - duplicateEmails.length) + " employee/s added",
-                        duplicateEmails: duplicateEmails
-                    });
-                });
-            } else {
+                }
                 response.send({
-                    message: "Direct hire from agency"
+                    message: (employee.length - duplicateEmails.length) + " employee/s added",
+                    duplicateEmails: duplicateEmails
                 });
-            }
+            });
         } else {
             response.send({
                 message: "Unauthorized access"
