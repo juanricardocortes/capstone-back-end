@@ -163,7 +163,7 @@ module.exports = {
             });
         }
     },
-    uploadImage: function (request, response) {
+    uploadEmployeeImage: function (request, response) {
         try {
             admin.database(appdb).ref(database.main + database.employees + request.body.userkey).update({
                 image: request.body.downloadURL

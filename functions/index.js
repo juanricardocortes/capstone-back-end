@@ -38,12 +38,13 @@ secureRoutes.route(routes.employee.archiveEmployee).post(cors(), employee.archiv
 secureRoutes.route(routes.employee.unarchiveEmployee).post(cors(), employee.unarchiveEmployee);
 secureRoutes.route(routes.employee.updateEmployee).post(cors(), employee.updateEmployee);
 secureRoutes.route(routes.employee.getEmployees).post(cors(), employee.getEmployees);
+secureRoutes.route(routes.employee.uploadEmployeeImage).post(cors(), employee.uploadEmployeeImage);
 
 secureRoutes.route(routes.applicant.addApplicant).post(cors(), applicant.addApplicant);
 secureRoutes.route(routes.applicant.archiveApplicant).post(cors(), applicant.archiveApplicant);
 secureRoutes.route(routes.applicant.updateApplicant).post(cors(), applicant.updateApplicant);
 secureRoutes.route(routes.applicant.getApplicants).post(cors(), applicant.getApplicants);
-secureRoutes.route(routes.applicant.uploadImage).post(cors(), applicant.uploadImage);
+secureRoutes.route(routes.applicant.uploadApplicantImage).post(cors(), applicant.uploadApplicantImage);
 secureRoutes.route(routes.applicant.updateRequirements).post(cors(), applicant.updateRequirements);
 
 secureRoutes.route(routes.projects.addProject).post(cors(), projects.addProject);

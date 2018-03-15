@@ -194,7 +194,7 @@ module.exports = {
             })
         }
     },
-    uploadImage: function (request, response) {
+    uploadApplicantImage: function (request, response) {
         try {
             admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update({
                 image: request.body.downloadURL

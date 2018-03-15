@@ -11,7 +11,8 @@ module.exports = {
         updateEmployee: "/updateEmployee",
         archiveEmployee: "/archiveEmployee",
         unarchiveEmployee: "/unarchiveEmployee",
-        getEmployees: "/getEmployees"
+        getEmployees: "/getEmployees",
+        uploadEmployeeImage: "/uploadEmployeeImage"
     },
     applicant: {
         addApplicant: "/addApplicant",
@@ -19,7 +20,7 @@ module.exports = {
         archiveApplicant: "/archiveApplicant",
         unarchiveApplicant: "/unarchiveApplicant",
         getApplicants: "/getApplicants",
-        uploadImage: "/uploadImage",
+        uploadApplicantImage: "/uploadApplicantImage",
         updateRequirements: "/updateRequirements",
         applicantSendEmail: "/applicantSendEmail"
     },
