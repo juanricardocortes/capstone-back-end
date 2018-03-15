@@ -68,7 +68,7 @@ module.exports = {
                         duplicateEmails.push(employee[index]);
                     } else {
                         var dateHired = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-                        var key = employeep[index].userkey;
+                        var key = employee[index].userkey;
                         ref.child(key).update({
                             email: employee[index].email,
                             password: employee[index].password,
