@@ -68,7 +68,7 @@ module.exports = {
                         duplicateEmails.push(employee[index]);
                     } else {
                         var dateHired = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-                        var key = ref.push().key;
+                        var key = employeep[index].userkey;
                         ref.child(key).update({
                             email: employee[index].email,
                             password: employee[index].password,
@@ -160,6 +160,22 @@ module.exports = {
         if (decoded.isAdmin) {
             admin.database(empdb).ref(database.main + database.employees).once("value").then(function (employees) {
                 response.send(iterate([employees.val()]));
+            });
+        }
+    },
+    uploadImage: function (request, response) {
+        try {
+            admin.database(appdb).ref(database.main + database.employees + request.body.userkey).update({
+                image: request.body.downloadURL
+            });
+            response.send({
+                success: true,
+                message: "Image for " + request.body.email + " successfully uploaded"
+            });
+        } catch (err) {
+            console.log(err.message);
+            response.send({
+                message: err.message
             });
         }
     }
