@@ -102,18 +102,26 @@ module.exports = {
     archiveEmployee: function (request, response) {
         var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
-            if (!request.body.isArchived) {
-                admin.database(empdb).ref(database.main + database.employees + request.body.userkey).update({
-                    isArchived: true
+            var employees = request.body.employees;
+            for (var index = 0; index < employees.length; index++) {
+                admin.database(empdb).ref(database.main + database.employees + employees[index].userkey).update({
+                    isArchived: (employees[index].isArchived)
                 });
-                response.send({
-                    message: "Archive successful"
-                });
-            } else {
-                response.send({
-                    message: "Already archived"
+                var key = admin.database(empdb).ref().push().key;
+                var message;
+                var time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
+                admin.database(empdb).ref(database.main + database.notifications.employees + key).update({
+                    applicant: employees[index],
+                    key: employees[index].userkey,
+                    time: time,
+                    seen: false,
+                    message: "Success",
+                    icon: "priority_high"
                 });
             }
+            response.send({
+                message: "Success"
+            });
         } else {
             response.send({
                 message: "Unauthorized access"
