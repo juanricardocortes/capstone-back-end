@@ -93,10 +93,11 @@ module.exports = {
                             email: applicant[index].email,
                             lastname: applicant[index].lastname,
                             firstname: applicant[index].firstname,
+                            position: applicant[index].position,
                             userkey: key,
                             referenceNumber: referenceNumber,
                             isArchived: false,
-                            completion: "0%",
+                            completion: 0,
                             hired: false,
                             requirements: {
                                 reqOne: {
@@ -216,18 +217,25 @@ module.exports = {
                 token: token,
                 applicantKey: applicantKey,
                 requirementKey: requirementKey,
-                status: status
+                status: status,
+                completion: completion,
+                totalRequirements: reqlength;
             }
         */
         var req = request.body;
         var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
+            console.log(req.completion);
+            var newCompletion = req.completion + ((1 / (req.totalRequirements)) * 100)
             admin.database(appdb).ref(database.main + database.applicants + req.applicantKey + database.applicant.requirements + req.requirementKey)
                 .update({
                     status: req.status
                 });
+            admin.database(appdb).ref(database.main + database.applicants + req.applicantKey).update({
+                completion: newCompletion
+            });
             response.send({
-                message: "Requirement updated"
+                message: request.body.requirementName + " completed"
             });
         } else {
             response.send({

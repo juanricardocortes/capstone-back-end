@@ -68,7 +68,12 @@ module.exports = {
                         duplicateEmails.push(employee[index]);
                     } else {
                         var dateHired = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-                        var key = employee[index].userkey;
+                        var key;
+                        if (employee[index].userkey) {
+                            key = employee[index].userkey;
+                        } else {
+                            key = admin.database(empdb).ref().push().key;
+                        }
                         ref.child(key).update({
                             email: employee[index].email,
                             password: employee[index].password,
@@ -82,7 +87,7 @@ module.exports = {
                                 image: employee[index].image
                             }
                         });
-                        admin.database(empdb).ref(database.main + database.employees + employee[index].userkey).update({
+                        admin.database(empdb).ref(database.main + database.applicants + employee[index].applicantkey).update({
                             hired: true,
                             dateHired: dateHired
                         });
@@ -111,7 +116,7 @@ module.exports = {
                 var message;
                 var time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
                 admin.database(empdb).ref(database.main + database.notifications.employees + key).update({
-                    applicant: employees[index],
+                    employees: employees[index],
                     key: employees[index].userkey,
                     time: time,
                     seen: false,
