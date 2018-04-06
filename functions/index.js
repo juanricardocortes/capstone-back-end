@@ -49,7 +49,6 @@ secureRoutes.route(routes.applicant.updateRequirements).post(cors(), applicant.u
 
 secureRoutes.route(routes.projects.addProject).post(cors(), projects.addProject);
 secureRoutes.route(routes.projects.archiveProject).post(cors(), projects.archiveProject);
-secureRoutes.route(routes.projects.unarchiveProject).post(cors(), projects.unarchiveProject);
 
 secureRoutes.route(routes.projects.updateProject.updateProjectLead).post(cors(), projects.updateProject.updateProjectLead);
 

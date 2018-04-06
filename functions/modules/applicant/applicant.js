@@ -69,7 +69,7 @@ module.exports = {
         /*
             {
                 token: token,
-                applicants: []
+                allApplicants: []
             }
         */
         var decoded = jwt.decode(request.body.token);
@@ -99,6 +99,8 @@ module.exports = {
                             isArchived: false,
                             completion: 0,
                             hired: false,
+                            contactNumber: applicant[index].contact,
+                            address: applicant[index].address,
                             requirements: {
                                 reqOne: {
                                     key: "reqOne",

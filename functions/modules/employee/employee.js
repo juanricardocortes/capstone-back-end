@@ -45,7 +45,7 @@ module.exports = {
         /*
             {
                 token: token
-                employees: [
+                allEmployees: [
                     {
                         email: email,
                         password: password
@@ -55,7 +55,7 @@ module.exports = {
         */
 
         var decoded = jwt.decode(request.body.token);
-        var employee = request.body.employees;
+        var employee = request.body.allEmployees;
         if (decoded.isAdmin) {
             var ref = admin.database(empdb).ref(database.main + database.employees);
             ref.once('value').then(function (snapshot) {
@@ -76,12 +76,14 @@ module.exports = {
                         }
                         ref.child(key).update({
                             email: employee[index].email,
-                            password: employee[index].password,
+                            password: employee[index].lastname,
                             userkey: key,
                             isAdmin: false,
                             isArchived: false,
                             files: {
                                 datehired: dateHired,
+                                address: employee[index].address,
+                                contact: employee[index].contact,
                                 firstname: employee[index].firstname,
                                 lastname: employee[index].lastname,
                                 image: employee[index].image
@@ -178,7 +180,7 @@ module.exports = {
     },
     uploadEmployeeImage: function (request, response) {
         try {
-            admin.database(empdb).ref(database.main + database.employees + request.body.userkey).update({
+            admin.database(empdb).ref(database.main + database.employees + request.body.userkey + database.employee.information).update({
                 image: request.body.downloadURL
             });
             response.send({

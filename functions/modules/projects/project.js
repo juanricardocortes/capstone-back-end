@@ -72,7 +72,6 @@ module.exports = {
                 token: token,
                 project: {
                     name: projectname,
-                    slots: slots
                 },
                 dates: {
                     startdate: date,
@@ -90,19 +89,22 @@ module.exports = {
                         name: project.name
                     }, allNames)) {
                     response.send({
+                        success: "error",
                         message: "Project with that name already exists"
                     });
                 } else {
-                    var key = ref.push().key;
+                    var key = admin.database(projdb).ref().push().key;;
                     ref.child(key).update({
                         name: project.name,
                         projectkey: key,
+                        isArchived: false,
                         schedule: {
                             dates: request.body.dates
                         }
                     });
                     response.send({
-                        message: "Add project successful"
+                        success: "success",
+                        message: "Project " + project.name + " added"
                     });
                 }
             });
@@ -117,53 +119,36 @@ module.exports = {
             {
                 token: token,
                 isArchived: false,
-                projectkey: projectkey
+                projects: []
             }
         */
         var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
-            if (!request.body.isArchived) {
-                admin.database(projdb).ref(database.main + database.projects + request.body.projectkey)
-                    .update({
-                        isArchived: true
-                    });
-                response.send({
-                    message: "Project archived!"
-                })
-            } else {
-                response.send({
-                    message: "Project already archived"
+            var projects = request.body.projects;
+            for (var index = 0; index < projects.length; index++) {
+                admin.database(projdb).ref(database.main + database.projects + projects[index].projectkey).update({
+                    isArchived: (projects[index].isArchived)
+                });
+                var key = admin.database(projdb).ref().push().key;
+                var message;
+                // if (!applicants[index].isArchived) {
+                //     message = "Unarchived: " + applicants[index].email
+                // } else {
+                //     message = "Archived: " + applicants[index].email;
+                // }
+                var time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
+                admin.database(projdb).ref(database.main + database.notifications.projects + key).update({
+                    project: projects[index],
+                    key: projects[index].projectkey,
+                    time: time,
+                    seen: false,
+                    message: "Success",
+                    icon: "priority_high"
                 });
             }
-        } else {
             response.send({
-                message: "Unauthorized access"
+                message: "Success"
             });
-        }
-    },
-    unarchiveProject: function (request, response) {
-        /* 
-            {
-                token: token,
-                isArchived: true,
-                projectkey: projectkey
-            }
-        */
-        var decoded = jwt.decode(request.body.token);
-        if (decoded.isAdmin) {
-            if (request.body.isArchived) {
-                admin.database(projdb).ref(database.main + database.projects + request.body.projectkey)
-                    .update({
-                        isArchived: false
-                    });
-                response.send({
-                    message: "Project unarchived!"
-                })
-            } else {
-                response.send({
-                    message: "Project already unarchived"
-                });
-            }
         } else {
             response.send({
                 message: "Unauthorized access"
@@ -181,24 +166,22 @@ module.exports = {
             */
             var decoded = jwt.decode(request.body.token);
             if (decoded.isAdmin) {
-                var empref = admin.database(projdb).ref(database.main + database.employees + request.body.userkey);
-                empref.once('value').then(function (empdata) {
-                    var employee = empdata.val();
-                    var updateProjectLead = {
-                        projectlead: employee
-                    }
-                    admin.database(projdb).ref(database.main + database.projects + request.body.projectkey)
-                        .update(updateProjectLead);
-                    admin.database(projdb).ref(database.main + database.employees + employee.userkey + database.employee.information + database.employee.projects + request.body.projectkey)
-                        .update({
-                            isProjectLead: true
-                        });
-                    response.send({
-                        message: "Update project lead successful"
-                    })
-                });
+                var updateProjectLead = {
+                    projectlead: request.body.employee
+                }
+                admin.database(projdb).ref(database.main + database.projects + request.body.projectkey)
+                    .update(updateProjectLead);
+                admin.database(projdb).ref(database.main + database.employees + request.body.employee.userkey + database.employee.information + database.employee.projects + request.body.projectkey)
+                    .update({
+                        isProjectLead: true
+                    });
+                response.send({
+                    success: "success",
+                    message: "Update project lead successful"
+                })
             } else {
                 response.send({
+                    success: "error",
                     message: "Unauthorized access"
                 });
             }
@@ -230,17 +213,20 @@ module.exports = {
                                         slotkey: pushKey
                                     });
                                     response.send({
+                                        success: "success",
                                         message: "Slot added successful"
                                     });
                                 });
                             } else {
                                 response.send({
+                                    success: "error",
                                     message: "Unauthorized access"
                                 });
                             }
                         }).catch(function (err) {
                             response.send({
                                 err: err.message,
+                                success: "error",
                                 message: "Project not found"
                             });
                         });
@@ -301,9 +287,10 @@ module.exports = {
                                     role: slotdetails.val().role,
                                     slotKey: slotdetails.val().slotkey,
                                     projectKey: req.projectkey,
-                                    projectLead: projectdetails.val().projectlead.userkey,   
+                                    projectLead: projectdetails.val().projectlead.userkey,
                                     shiftdetails: slotdetails.val().shiftdetails,
-                                    dates: req.dates
+                                    dates: req.dates,
+                                    isProjectLead: false
                                 }).then(function () {
                                     empref.once('value').then(function (empdata) {
                                         ref.child(database.project.slots + req.slotkey).update({
@@ -313,7 +300,8 @@ module.exports = {
                                         ref.child(database.project.schedule + database.project.shifts + slotdetails.val().shiftdetails.shiftkey + database.project.employees + req.userkey)
                                             .update(empdata.val());
                                         response.send({
-                                            message: "Member added"
+                                            success: "success",
+                                            message: empdata.val().files.lastname + " added"
                                         });
                                     });
                                 });
@@ -322,6 +310,7 @@ module.exports = {
                     });
                 } else {
                     response.send({
+                        success: "error",
                         message: "Unauthorized access"
                     })
                 }
@@ -452,6 +441,7 @@ module.exports = {
                                     time: req.time
                                 }, allShifts)) {
                                 response.send({
+                                    success: false,
                                     message: "Shift with that time already exists"
                                 });
                             } else {
@@ -466,16 +456,19 @@ module.exports = {
                                                     shiftkey: pushKey
                                                 });
                                             response.send({
+                                                success: "success",
                                                 message: "Shift added successful"
                                             });
                                         } else {
                                             response.send({
+                                                success: "error",
                                                 message: "Unauthorized access"
                                             });
                                         }
                                     }).catch(function (err) {
                                         response.send({
-                                            message: "Project not found"
+                                            success: "error",
+                                            message: "Project not found" + err.message
                                         });
                                     });
                             }
