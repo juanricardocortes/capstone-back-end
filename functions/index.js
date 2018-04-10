@@ -35,9 +35,9 @@ secureRoutes.route(routes.auth.changePassword).post(cors(), auth.changePassword)
 
 secureRoutes.route(routes.employee.addEmployee).post(cors(), employee.addEmployee);
 secureRoutes.route(routes.employee.archiveEmployee).post(cors(), employee.archiveEmployee);
-secureRoutes.route(routes.employee.unarchiveEmployee).post(cors(), employee.unarchiveEmployee);
 secureRoutes.route(routes.employee.updateEmployee).post(cors(), employee.updateEmployee);
 secureRoutes.route(routes.employee.getEmployees).post(cors(), employee.getEmployees);
+secureRoutes.route(routes.employee.getEmployee).post(cors(), employee.getEmployee);
 secureRoutes.route(routes.employee.uploadEmployeeImage).post(cors(), employee.uploadEmployeeImage);
 
 secureRoutes.route(routes.applicant.addApplicant).post(cors(), applicant.addApplicant);
@@ -66,6 +66,7 @@ secureRoutes.route(routes.projects.updateProject.schedule.shift.updateShift).pos
 secureRoutes.route(routes.projects.updateProject.schedule.shift.getShifts).post(cors(), projects.updateProject.schedule.shift.getShifts);
 
 secureRoutes.route(routes.leaves.addLeave).post(cors(), leaves.addLeave);
+secureRoutes.route(routes.leaves.requestLeave).post(cors(), leaves.requestLeave);
 secureRoutes.route(routes.leaves.manageLeaves.acceptLeaves).post(cors(), leaves.manageLeaves.acceptLeaves);
 secureRoutes.route(routes.leaves.manageLeaves.declineLeaves).post(cors(), leaves.manageLeaves.declineLeaves);
 

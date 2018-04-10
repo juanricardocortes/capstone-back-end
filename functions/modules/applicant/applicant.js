@@ -3,6 +3,7 @@ var nodemailer = require('nodemailer');
 var database = require("../../strings/database");
 var constants = require("../../strings/constants");
 var admin = require("firebase-admin");
+var moment = require("moment");
 var serviceAccount = require("../google/serviceAccountKey.json");
 var appdb = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -80,7 +81,6 @@ module.exports = {
                 var duplicateEmails = [];
                 var allEmails = getEmail(iterate([snapshot.val()]));
                 for (var index = 0; index < applicant.length; index++) {
-                    var time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
                     if (containsObject({
                             email: applicant[index].email
                         }, allEmails)) {
@@ -99,6 +99,7 @@ module.exports = {
                             isArchived: false,
                             completion: 0,
                             hired: false,
+                            birthdate: applicant[index].birthdate,
                             contactNumber: applicant[index].contact,
                             address: applicant[index].address,
                             requirements: {
@@ -114,14 +115,19 @@ module.exports = {
                                 }
                             }
                         });
-                        admin.database(appdb).ref(database.main + database.notifications.applicants + key).update({
+
+                        var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                        var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
+                        var notificationKey = notifRef.push().key;
+                        notifRef.child(notificationKey).update({
                             applicant: applicant[index],
-                            key: key,
+                            key: notificationKey,
                             time: time,
                             seen: false,
                             message: "Added: " + applicant[index].email,
                             icon: "priority_high"
                         });
+
                     }
                 }
                 response.send({
@@ -149,22 +155,24 @@ module.exports = {
                 admin.database(appdb).ref(database.main + database.applicants + applicants[index].userkey).update({
                     isArchived: (applicants[index].isArchived)
                 });
-                var key = admin.database(appdb).ref().push().key;
-                var message;
-                // if (!applicants[index].isArchived) {
-                //     message = "Unarchived: " + applicants[index].email
-                // } else {
-                //     message = "Archived: " + applicants[index].email;
-                // }
-                var time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-                admin.database(appdb).ref(database.main + database.notifications.applicants + key).update({
+                var message = "";
+                if(applicants[index].isArchived){
+                    message = "Archived"
+                } else {
+                    message = "Unarchived"
+                }
+                var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
+                var notificationKey = notifRef.push().key;
+                notifRef.child(notificationKey).update({
                     applicant: applicants[index],
-                    key: applicants[index].userkey,
+                    key: notificationKey,
                     time: time,
                     seen: false,
-                    message: "Success",
+                    message: message + ": " + applicants[index].email,
                     icon: "priority_high"
                 });
+
             }
             response.send({
                 message: "Success"
@@ -180,6 +188,19 @@ module.exports = {
         var user = request.body.user;
         if (decoded.isAdmin) {
             admin.database(appdb).ref(database.main + database.applicants + user.userkey).update(user);
+
+            var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+            var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
+            var notificationKey = notifRef.push().key;
+            notifRef.child(notificationKey).update({
+                applicant: request.body.user,
+                key: notificationKey,
+                time: time,
+                seen: false,
+                message: "Updated: " + request.body.user.email,
+                icon: "priority_high"
+            });
+
             response.send({
                 message: "Update successful"
             });
@@ -202,6 +223,7 @@ module.exports = {
             admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update({
                 image: request.body.downloadURL
             });
+
             response.send({
                 success: true,
                 message: "Image for " + request.body.email + " successfully uploaded"
@@ -217,6 +239,7 @@ module.exports = {
         /*
             {
                 token: token,
+                applicant: applicant
                 applicantKey: applicantKey,
                 requirementKey: requirementKey,
                 status: status,
@@ -236,6 +259,19 @@ module.exports = {
             admin.database(appdb).ref(database.main + database.applicants + req.applicantKey).update({
                 completion: newCompletion
             });
+
+            var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+            var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
+            var notificationKey = notifRef.push().key;
+            notifRef.child(notificationKey).update({
+                applicant: req.applicant,
+                key: notificationKey,
+                time: time,
+                seen: false,
+                message: "Completed " + req.requirementName + ": " + req.applicant.email,
+                icon: "priority_high"
+            });
+
             response.send({
                 message: request.body.requirementName + " completed"
             });

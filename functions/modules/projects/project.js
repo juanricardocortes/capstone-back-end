@@ -2,6 +2,7 @@ var jwt = require("jsonwebtoken");
 var database = require("../../strings/database");
 var constants = require("../../strings/constants");
 var admin = require("firebase-admin");
+var moment = require("moment");
 var serviceAccount = require("../google/serviceAccountKey.json");
 var projdb = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -38,6 +39,16 @@ function getProjectNames(projects) {
         });
     }
     return names;
+}
+
+function getProjectMembers(project) {
+    var userkeys = [];
+    for (var index = 0; index < project.length; index++) {
+        userkeys.push({
+            userkey: project[index].userkey
+        });
+    }
+    return userkeys;
 }
 
 function getDateToday() {
@@ -102,6 +113,22 @@ module.exports = {
                             dates: request.body.dates
                         }
                     });
+
+                    var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                    var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
+                    var notificationKey = notifRef.push().key;
+                    notifRef.child(notificationKey).update({
+                        project: {
+                            name: project.name,
+                            projectkey: key
+                        },
+                        key: notificationKey,
+                        time: time,
+                        seen: false,
+                        message: "Added: " + project.name,
+                        icon: "priority_high"
+                    });
+
                     response.send({
                         success: "success",
                         message: "Project " + project.name + " added"
@@ -130,19 +157,23 @@ module.exports = {
                     isArchived: (projects[index].isArchived)
                 });
                 var key = admin.database(projdb).ref().push().key;
-                var message;
-                // if (!applicants[index].isArchived) {
-                //     message = "Unarchived: " + applicants[index].email
-                // } else {
-                //     message = "Archived: " + applicants[index].email;
-                // }
-                var time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-                admin.database(projdb).ref(database.main + database.notifications.projects + key).update({
-                    project: projects[index],
-                    key: projects[index].projectkey,
+                var message = "Unarchived";
+                if (projects[index].isArchived) {
+                    message = "Archived"
+                }
+
+                var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
+                var notificationKey = notifRef.push().key;
+                notifRef.child(notificationKey).update({
+                    project: {
+                        name: projects[index].name,
+                        projectkey: projects[index].projectkey
+                    },
+                    key: notificationKey,
                     time: time,
                     seen: false,
-                    message: "Success",
+                    message: message + ": " + projects[index].name,
                     icon: "priority_high"
                 });
             }
@@ -161,11 +192,14 @@ module.exports = {
                 {
                     token: token,
                     projectkey: projectkey,
-                    employee: employeeobject
+                    employee: employeeobject,
+                    project: projectObject
                 }
             */
             var decoded = jwt.decode(request.body.token);
             if (decoded.isAdmin) {
+                var name = request.body.employee.files.lastname + ", " + request.body.employee.files.firstname;
+                request.body.employee.files = null;
                 var updateProjectLead = {
                     projectlead: request.body.employee
                 }
@@ -173,8 +207,26 @@ module.exports = {
                     .update(updateProjectLead);
                 admin.database(projdb).ref(database.main + database.employees + request.body.employee.userkey + database.employee.information + database.employee.projects + request.body.projectkey)
                     .update({
-                        isProjectLead: true
+                        isProjectLead: true,
+                        projectName: request.body.project.name,
+                        projectKey: request.body.projectkey
                     });
+
+                var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
+                var notificationKey = notifRef.push().key;
+                notifRef.child(notificationKey).update({
+                    project: {
+                        name: request.body.project.name,
+                        projectkey: request.body.projectkey
+                    },
+                    key: notificationKey,
+                    time: time,
+                    seen: false,
+                    message: "Project lead for " + request.body.project.name + " " + name,
+                    icon: "priority_high"
+                });
+
                 response.send({
                     success: "success",
                     message: "Update project lead successful"
@@ -193,43 +245,49 @@ module.exports = {
                     /*
                         {
                             token: token,
-                            projectkey: projectkey,
-                            shiftkey: shiftkey,
+                            project: project,
+                            employee: employee,
+                            shift: shift,
                             role: role
                         }
                     */
                     var decoded = jwt.decode(request.body.token);
                     var req = request.body;
-                    admin.database(projdb).ref(database.main + database.employees + decoded.userkey + database.employee.information + database.employee.projects + request.body.projectkey)
-                        .once('value').then(function (snapshot) {
-                            if (snapshot.val().isProjectLead) {
-                                var ref = admin.database(projdb).ref(database.main + database.projects + req.projectkey);
-                                ref.child(database.project.schedule + database.project.shifts + req.shiftkey).once('value').then(function (snapshot) {
-                                    var shiftdetails = snapshot.val();
-                                    var pushKey = ref.push().key;
-                                    ref.child(database.project.slots + pushKey).update({
-                                        shiftdetails: shiftdetails,
-                                        role: req.role,
-                                        slotkey: pushKey
-                                    });
-                                    response.send({
-                                        success: "success",
-                                        message: "Slot added successful"
-                                    });
-                                });
-                            } else {
-                                response.send({
-                                    success: "error",
-                                    message: "Unauthorized access"
-                                });
-                            }
-                        }).catch(function (err) {
-                            response.send({
-                                err: err.message,
-                                success: "error",
-                                message: "Project not found"
-                            });
+                    if (req.project.projectlead.userkey === req.employee.userkey) {
+                        var shiftdetails = req.shift;
+                        var ref = admin.database(projdb).ref(database.main + database.projects + req.project.projectkey);
+                        var pushKey = ref.push().key;
+                        ref.child(database.project.slots + pushKey).update({
+                            shiftdetails: shiftdetails,
+                            role: req.role,
+                            slotkey: pushKey
                         });
+
+                        var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                        var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
+                        var notificationKey = notifRef.push().key;
+                        notifRef.child(notificationKey).update({
+                            project: {
+                                name: req.project.name,
+                                projectkey: req.project.projectkey
+                            },
+                            key: notificationKey,
+                            time: time,
+                            seen: false,
+                            message: "Added a " + req.role + " role in " + req.project.name,
+                            icon: "priority_high"
+                        });
+
+                        response.send({
+                            success: "success",
+                            message: "Slot added successful"
+                        });
+                    } else {
+                        response.send({
+                            success: "error",
+                            message: "Unauthorized access"
+                        });
+                    }
                 },
                 deleteSlot: function (request, response) {
                     /*
@@ -266,53 +324,115 @@ module.exports = {
                     {
                         token: token,
                         slotkey: slotkey,
-                        projectkey: projectkey,
-                        userkey: userkey,
                         dates: {
                             startDate: startDate,,
                             endDate: endDate
                         }
+                        employee: employee,
+                        user:user
                     }
                  */
                 var decoded = jwt.decode(request.body.token);
                 var req = request.body;
-                if (decoded.isAdmin) {
-                    var empref = admin.database(projdb).ref(database.main + database.employees + req.userkey);
-                    empref.once('value').then(function (empdata) {
-                        var employee = empdata.val();
-                        var ref = admin.database(projdb).ref(database.main + database.projects + req.projectkey);
-                        ref.once('value').then(function (projectdetails) {
-                            ref.child(database.project.slots + req.slotkey).once('value').then(function (slotdetails) {
-                                empref.child(database.employee.information + database.employee.projects + req.projectkey).update({
-                                    role: slotdetails.val().role,
-                                    slotKey: slotdetails.val().slotkey,
-                                    projectKey: req.projectkey,
-                                    projectLead: projectdetails.val().projectlead.userkey,
-                                    shiftdetails: slotdetails.val().shiftdetails,
-                                    dates: req.dates,
-                                    isProjectLead: false
-                                }).then(function () {
-                                    empref.once('value').then(function (empdata) {
-                                        ref.child(database.project.slots + req.slotkey).update({
-                                            currentholder: empdata.val()
-                                        });
-                                        ref.child(database.project.members + req.userkey).update(empdata.val());
-                                        ref.child(database.project.schedule + database.project.shifts + slotdetails.val().shiftdetails.shiftkey + database.project.employees + req.userkey)
-                                            .update(empdata.val());
-                                        response.send({
-                                            success: "success",
-                                            message: empdata.val().files.lastname + " added"
-                                        });
-                                    });
+                if (req.project.projectlead.userkey === req.user.userkey) {
+
+                    var empref = admin.database(projdb).ref(database.main + database.employees + req.employee.userkey);
+                    // var employee = empdata.val();
+                    var ref = admin.database(projdb).ref(database.main + database.projects + req.project.projectkey);
+
+                    if (!containsObject({
+                            userkey: req.employee.userkey
+                        }, getProjectMembers(iterate([req.project.members])))) {
+
+                        var overlapError = false;
+                        var overlapErrorMessage = "";
+                        var isProjectLead = false;
+
+                        try {
+                            empProjects = req.employee.files.projects
+                            for (var key in empProjects) {
+                                var project = empProjects[key];
+                                if (project.projectKey === req.project.projectkey) {
+                                    if (project.isProjectLead) {
+                                        isProjectLead = true;
+                                    } else {
+                                        isProjectLead = false;
+                                    }
+                                }
+                                if (project.dates) {
+                                    if ((moment(project.dates.startDate).isSameOrBefore(req.project.schedule.dates.endDate) &&
+                                            moment(project.dates.startDate).isSameOrAfter(req.project.schedule.dates.startDate)) ||
+                                        (moment(project.dates.endDate).isSameOrBefore(req.project.schedule.dates.endDate) &&
+                                            moment(project.dates.endDate).isSameOrAfter(req.project.schedule.dates.startDate))) {
+                                        var overlapError = true;
+                                        if (overlapErrorMessage === "") {
+                                            overlapErrorMessage = "Overlaps with schedule on: [" + project.projectName + "]";
+                                        } else {
+                                            overlapErrorMessage += ", [" + project.projectName + "]";
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (err) {}
+
+                        if (overlapError) {
+                            response.send({
+                                success: "error",
+                                message: overlapErrorMessage
+                            });
+                        } else {
+                            empref.child(database.employee.information + database.employee.projects + req.project.projectkey).update({
+                                role: req.slot.role,
+                                slotKey: req.slot.slotkey,
+                                projectKey: req.project.projectkey,
+                                projectName: req.project.name,
+                                projectLead: req.project.projectlead.userkey,
+                                shiftdetails: req.slot.shiftdetails,
+                                dates: req.project.schedule.dates,
+                                isProjectLead: isProjectLead
+                            }).then(function () {
+
+                                var name = req.employee.files.lastname + ", " + req.employee.files.firstname;
+                                ref.child(database.project.slots + req.slot.slotkey).update({
+                                    currentholder: req.employee
+                                });
+                                ref.child(database.project.members + req.employee.userkey).update(req.employee);
+                                // ref.child(database.project.schedule + database.project.shifts + req.slot.shiftdetails.shiftkey + database.project.employees + req.employee.userkey)
+                                //     .update(req.employee);
+                                var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                                var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
+                                var notificationKey = notifRef.push().key;
+                                notifRef.child(notificationKey).update({
+                                    project: {
+                                        name: req.project.name,
+                                        projectkey: req.project.projectkey
+                                    },
+                                    key: notificationKey,
+                                    time: time,
+                                    seen: false,
+                                    message: "Added " + name + " in " + req.project.name,
+                                    icon: "priority_high"
+                                });
+
+                                response.send({
+                                    success: "success",
+                                    message: name + " added"
                                 });
                             });
+                        }
+
+                    } else {
+                        response.send({
+                            success: "error",
+                            message: req.employee.files.lastname + " already a member"
                         });
-                    });
+                    }
+
                 } else {
                     response.send({
                         success: "error",
                         message: "Unauthorized access"
-                    })
+                    });
                 }
             },
             updateMembers: function (request, response) {
@@ -389,7 +509,7 @@ module.exports = {
                         var req = request.body;
                         var ref = admin.database(projdb).ref(database.main + database.projects + req.projectkey);
                         ref.child(database.project.schedule + database.project.dates).update({
-                            endDate: req.startDate
+                            startDate: req.startDate
                         });
                         response.send({
                             message: "update start date successful"
@@ -428,49 +548,59 @@ module.exports = {
                     /*
                         {
                             token: token,
-                            projectkey: projectkey,
-                            time: time,
+                            project: project,
+                            employee: employee,
+                            time: time
                         }
                     */
                     var req = request.body;
                     var decoded = jwt.decode(req.token);
-                    admin.database(projdb).ref(database.main + database.projects + req.projectkey + database.project.schedule + database.project.shifts)
+                    admin.database(projdb).ref(database.main + database.projects + req.project.projectkey + database.project.schedule + database.project.shifts)
                         .once('value').then(function (snapshot) {
                             var allShifts = getShifts(iterate([snapshot.val()]));
                             if (containsObject({
                                     time: req.time
                                 }, allShifts)) {
                                 response.send({
-                                    success: false,
+                                    success: "error",
                                     message: "Shift with that time already exists"
                                 });
                             } else {
-                                admin.database(projdb).ref(database.main + database.employees + decoded.userkey + database.employee.information + database.employee.projects + req.projectkey)
-                                    .once('value').then(function (snapshot) {
-                                        if (snapshot.val().isProjectLead) {
-                                            var ref = admin.database(projdb).ref(database.main + database.projects);
-                                            var pushKey = ref.push().key;
-                                            ref.child(req.projectkey + database.project.schedule + database.project.shifts + pushKey)
-                                                .update({
-                                                    time: req.time,
-                                                    shiftkey: pushKey
-                                                });
-                                            response.send({
-                                                success: "success",
-                                                message: "Shift added successful"
-                                            });
-                                        } else {
-                                            response.send({
-                                                success: "error",
-                                                message: "Unauthorized access"
-                                            });
-                                        }
-                                    }).catch(function (err) {
-                                        response.send({
-                                            success: "error",
-                                            message: "Project not found" + err.message
+                                if (req.project.projectlead.userkey === req.employee.userkey) {
+                                    var ref = admin.database(projdb).ref(database.main + database.projects);
+                                    var pushKey = ref.push().key;
+                                    ref.child(req.project.projectkey + database.project.schedule + database.project.shifts + pushKey)
+                                        .update({
+                                            time: req.time,
+                                            shiftkey: pushKey
                                         });
+
+                                    var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                                    var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
+                                    var notificationKey = notifRef.push().key;
+                                    notifRef.child(notificationKey).update({
+                                        project: {
+                                            name: req.project.name,
+                                            projectkey: req.project.projectkey
+                                        },
+                                        key: notificationKey,
+                                        time: time,
+                                        seen: false,
+                                        message: "Added shift " + req.time + " in " + req.project.name,
+                                        icon: "priority_high"
                                     });
+
+                                    response.send({
+                                        success: "success",
+                                        message: "Shift added successful"
+                                    });
+                                } else {
+                                    response.send({
+                                        success: "error",
+                                        message: "Unauthorized access"
+                                    });
+                                }
+
                             }
                         });
 

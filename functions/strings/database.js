@@ -18,7 +18,8 @@ module.exports = {
         slots: "/slots/",
         shifts: "shifts/",
         dates: "dates/",
-        employees: "/employees/"
+        employees: "/employees/",
+        requests: "/requests/"
     },
     leaves: "Leaves/",
     leave: {

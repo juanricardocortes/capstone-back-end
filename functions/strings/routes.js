@@ -10,15 +10,14 @@ module.exports = {
         addEmployee: "/addEmployee",
         updateEmployee: "/updateEmployee",
         archiveEmployee: "/archiveEmployee",
-        unarchiveEmployee: "/unarchiveEmployee",
         getEmployees: "/getEmployees",
-        uploadEmployeeImage: "/uploadEmployeeImage"
+        uploadEmployeeImage: "/uploadEmployeeImage",
+        getEmployee: "/getEmployee"
     },
     applicant: {
         addApplicant: "/addApplicant",
         updateApplicant: "/updateApplicant",
         archiveApplicant: "/archiveApplicant",
-        unarchiveApplicant: "/unarchiveApplicant",
         getApplicants: "/getApplicants",
         uploadApplicantImage: "/uploadApplicantImage",
         updateRequirements: "/updateRequirements",
@@ -52,6 +51,7 @@ module.exports = {
         unarchiveProject: "/unarchiveProject"
     },
     leaves: {
+        requestLeave: "/requestLeave",
         addLeave: "/addLeave",
         manageLeaves: {
             acceptLeaves: "/acceptLeaves",
