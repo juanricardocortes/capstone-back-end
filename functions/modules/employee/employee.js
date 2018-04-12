@@ -92,7 +92,7 @@ module.exports = {
                         }
                         ref.child(key).update({
                             email: employee[index].email,
-                            password: employee[index].lastname,
+                            password: "123123",
                             userkey: key,
                             isAdmin: false,
                             isArchived: false,

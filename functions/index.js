@@ -67,6 +67,7 @@ secureRoutes.route(routes.projects.updateProject.schedule.shift.getShifts).post(
 
 secureRoutes.route(routes.leaves.addLeave).post(cors(), leaves.addLeave);
 secureRoutes.route(routes.leaves.requestLeave).post(cors(), leaves.requestLeave);
+secureRoutes.route(routes.leaves.forwardLeave).post(cors(), leaves.forwardLeave);
 secureRoutes.route(routes.leaves.manageLeaves.acceptLeaves).post(cors(), leaves.manageLeaves.acceptLeaves);
 secureRoutes.route(routes.leaves.manageLeaves.declineLeaves).post(cors(), leaves.manageLeaves.declineLeaves);
 

@@ -209,7 +209,13 @@ module.exports = {
                     .update({
                         isProjectLead: true,
                         projectName: request.body.project.name,
-                        projectKey: request.body.projectkey
+                        projectKey: request.body.projectkey,
+                        dates: request.body.project.schedule.dates,
+                        projectLead: request.body.employee.userkey,
+                        role: "Project leader",
+                        shiftdetails: {
+                            time: "08:00 AM - 05:00 PM"
+                        }
                     });
 
                 var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
