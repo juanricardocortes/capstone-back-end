@@ -3,6 +3,7 @@ var database = require("../../strings/database");
 var constants = require("../../strings/constants");
 var admin = require("firebase-admin");
 var moment = require("moment");
+var crypto = require("../auth/crypto");
 var timezone = require("moment-timezone");
 var serviceAccount = require("../google/serviceAccountKey.json");
 var empdb = admin.initializeApp({
@@ -68,15 +69,15 @@ module.exports = {
         var decoded = jwt.decode(request.body.token);
         var employee = request.body.allEmployees;
         if (decoded.isAdmin) {
-
             var ref = admin.database(empdb).ref(database.main + database.employees);
-            ref.once('value').then(function (snapshot) {
+            ref.once("value").then(function (snapshot) {
                 var duplicateEmails = [];
+                var allEmails = [];
                 var allEmails = getEmail(iterate([snapshot.val()]));
                 for (var index = 0; index < employee.length; index++) {
-                    if (containsObject({
+                    if (containsObject(crypto.encrypt({
                             email: employee[index].email
-                        }, allEmails)) {
+                        }), allEmails)) {
                         duplicateEmails.push(employee[index]);
                     } else {
                         var datenow = moment(moment(), 'YYYY/MM/DD');
@@ -90,7 +91,7 @@ module.exports = {
                         } else {
                             key = admin.database(empdb).ref().push().key;
                         }
-                        ref.child(key).update({
+                        ref.child(key).update(crypto.encrypt({
                             email: employee[index].email,
                             password: "123123",
                             userkey: key,
@@ -106,25 +107,25 @@ module.exports = {
                                 image: employee[index].image,
                                 birthdate: employee[index].birthdate
                             }
-                        });
+                        }));
                         if (request.body.hireFrom === "applicants") {
-                            admin.database(empdb).ref(database.main + database.applicants + employee[index].applicantkey).update({
+                            admin.database(empdb).ref(database.main + database.applicants + employee[index].applicantkey).update(crypto.encrypt({
                                 hired: true,
                                 dateHired: dateHired
-                            });
+                            }));
                         }
 
                         var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                         var notifRef = admin.database(empdb).ref(database.main + database.notifications.employees);
                         var notificationKey = notifRef.push().key;
-                        notifRef.child(notificationKey).update({
+                        notifRef.child(notificationKey).update(crypto.encrypt({
                             employee: employee[index],
                             key: notificationKey,
                             time: time,
                             seen: false,
                             message: "Added: " + employee[index].email,
                             icon: "priority_high"
-                        });
+                        }));
                     }
                 }
                 response.send({
@@ -143,9 +144,9 @@ module.exports = {
         if (decoded.isAdmin) {
             var employees = request.body.employees;
             for (var index = 0; index < employees.length; index++) {
-                admin.database(empdb).ref(database.main + database.employees + employees[index].userkey).update({
+                admin.database(empdb).ref(database.main + database.employees + employees[index].userkey).update(crypto.encrypt({
                     isArchived: (employees[index].isArchived)
-                });
+                }));
 
                 var message = "Unarchived";
                 if (employees[index].isArchived) {
@@ -155,14 +156,14 @@ module.exports = {
                 var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                 var notifRef = admin.database(empdb).ref(database.main + database.notifications.employees);
                 var notificationKey = notifRef.push().key;
-                notifRef.child(notificationKey).update({
+                notifRef.child(notificationKey).update(crypto.encrypt({
                     employee: employees[index],
                     key: notificationKey,
                     time: time,
                     seen: false,
                     message: message + ": " + employees[index].email,
                     icon: "priority_high"
-                });
+                }));
             }
             response.send({
                 message: "Success"
@@ -171,7 +172,7 @@ module.exports = {
             response.send({
                 message: "Unauthorized access"
             });
-        }
+        } 
     },
     updateEmployee: function (request, response) {
         var user = request.body.user;
@@ -202,9 +203,9 @@ module.exports = {
     },
     uploadEmployeeImage: function (request, response) {
         try {
-            admin.database(empdb).ref(database.main + database.employees + request.body.userkey + database.employee.information).update({
+            admin.database(empdb).ref(database.main + database.employees + request.body.userkey + database.employee.information).update(crypto.encrypt({
                 image: request.body.downloadURL
-            });
+            }));
             response.send({
                 success: true,
                 message: "Image for " + request.body.email + " successfully uploaded"

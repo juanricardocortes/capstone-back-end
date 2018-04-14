@@ -3,6 +3,8 @@ var nodemailer = require('nodemailer');
 var database = require("../../strings/database");
 var constants = require("../../strings/constants");
 var admin = require("firebase-admin");
+var lodash = require("lodash");
+var crypto = require("./crypto");
 var serviceAccount = require("../google/serviceAccountKey.json");
 var authdb = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -30,10 +32,11 @@ module.exports = {
             var credentials = iterate([snapshot.val()]);
             var user = {};
             var valid = false;
-
+            var encrypteduser = crypto.encrypt(request.body.user);
             for (var index = 0; index < credentials.length; index++) {
                 user = credentials[index];
-                if (request.body.user.email === user.email && request.body.user.password === user.password) {
+
+                if (encrypteduser.email === user.email && encrypteduser.password === user.password) {
                     valid = true
                     break;
                 }
@@ -49,7 +52,7 @@ module.exports = {
                     });
                     var mailOptions = {
                         from: '"QWERTY" <noreply@gmail.com>',
-                        to: user.email,
+                        to: crypto.decryptVar(user.email),
                         subject: 'Confirm your login',
                         text: text,
                     };
@@ -59,9 +62,9 @@ module.exports = {
                         }
                     });
 
-                    admin.database(authdb).ref(database.main + database.employees + user.userkey).update({
+                    admin.database(authdb).ref(database.main + database.employees + crypto.decryptVar(user.userkey)).update(crypto.encrypt({
                         pin: pin
-                    });
+                    }));
                     response.send({
                         valid: true,
                         user: {
@@ -80,24 +83,26 @@ module.exports = {
         });
     },
     authTwo: function (request, response) {
-        var pin = request.body.pin;
+        var pin = parseInt(request.body.pin);
         var user = request.body.user;
-        admin.database(authdb).ref(database.main + database.employees + user.userkey).once('value').then(function (snapshot) {
-            var userPin = "" + snapshot.val().pin;
+        admin.database(authdb).ref(database.main + database.employees + crypto.decryptVar(user.userkey)).once('value').then(function (snapshot) {
+            var userPin = crypto.decryptVar(snapshot.val().pin);
             if (pin === userPin) {
-                admin.database(authdb).ref(database.main + database.employees + user.userkey).update({
+                admin.database(authdb).ref(database.main + database.employees + crypto.decryptVar(user.userkey)).update({
                     pin: null
-                });
-                var token = jwt.sign(user, process.env.SECRET_KEY, {
-                    expiresIn: 4000
-                });
-                response.send({
-                    user: snapshot.val(),
-                    token: token,
-                    valid: true
-                });
+                }).then(function () {
+                    var signature = lodash.omit(crypto.decrypt(snapshot.val()), ['pin', 'isAdmin', 'isArchived', 'files', 'password']);
+                    var token = jwt.sign(user, (JSON.stringify(signature) + process.env.SECRET_KEY), {
+                        expiresIn: '1d'
+                    });
+                    response.send({
+                        user: crypto.decrypt(snapshot.val()),
+                        token: token,
+                        valid: true
+                    });
+                })
             } else {
-                admin.database(authdb).ref(database.main + database.employees + user.userkey).update({
+                admin.database(authdb).ref(database.main + database.employees + crypto.decryptVar(user.userkey)).update({
                     pin: null
                 })
                 response.send({

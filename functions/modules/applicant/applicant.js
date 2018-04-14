@@ -4,6 +4,7 @@ var database = require("../../strings/database");
 var constants = require("../../strings/constants");
 var admin = require("firebase-admin");
 var moment = require("moment");
+var crypto = require("../auth/crypto");
 var serviceAccount = require("../google/serviceAccountKey.json");
 var appdb = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -81,15 +82,15 @@ module.exports = {
                 var duplicateEmails = [];
                 var allEmails = getEmail(iterate([snapshot.val()]));
                 for (var index = 0; index < applicant.length; index++) {
-                    if (containsObject({
+                    if (containsObject(crypto.encrypt({
                             email: applicant[index].email
-                        }, allEmails)) {
+                        }), allEmails)) {
                         duplicateEmails.push(applicant[index]);
                     } else {
                         var referenceNumber = Math.floor(100000 + Math.random() * 900000);
                         sendEmailToApplicant(applicant[index].email, referenceNumber.toString());
                         var key = applicant[index].userkey;
-                        ref.child(key).update({
+                        ref.child(key).update(crypto.encrypt({
                             email: applicant[index].email,
                             lastname: applicant[index].lastname,
                             firstname: applicant[index].firstname,
@@ -114,19 +115,19 @@ module.exports = {
                                     status: "incomplete"
                                 }
                             }
-                        });
+                        }));
 
                         var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                         var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
                         var notificationKey = notifRef.push().key;
-                        notifRef.child(notificationKey).update({
+                        notifRef.child(notificationKey).update(crypto.encrypt({
                             applicant: applicant[index],
                             key: notificationKey,
                             time: time,
                             seen: false,
                             message: "Added: " + applicant[index].email,
                             icon: "priority_high"
-                        });
+                        }));
 
                     }
                 }
@@ -152,9 +153,9 @@ module.exports = {
         if (decoded.isAdmin) {
             var applicants = request.body.applicant;
             for (var index = 0; index < applicants.length; index++) {
-                admin.database(appdb).ref(database.main + database.applicants + applicants[index].userkey).update({
+                admin.database(appdb).ref(database.main + database.applicants + applicants[index].userkey).update(crypto.encrypt({
                     isArchived: (applicants[index].isArchived)
-                });
+                }));
                 var message = "";
                 if(applicants[index].isArchived){
                     message = "Archived"
@@ -164,14 +165,14 @@ module.exports = {
                 var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                 var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
                 var notificationKey = notifRef.push().key;
-                notifRef.child(notificationKey).update({
+                notifRef.child(notificationKey).update(crypto.encrypt({
                     applicant: applicants[index],
                     key: notificationKey,
                     time: time,
                     seen: false,
                     message: message + ": " + applicants[index].email,
                     icon: "priority_high"
-                });
+                }));
 
             }
             response.send({
@@ -220,9 +221,9 @@ module.exports = {
     },
     uploadApplicantImage: function (request, response) {
         try {
-            admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update({
+            admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update(crypto.encrypt({
                 image: request.body.downloadURL
-            });
+            }));
 
             response.send({
                 success: true,
@@ -253,24 +254,24 @@ module.exports = {
             console.log(req.completion);
             var newCompletion = req.completion + ((1 / (req.totalRequirements)) * 100)
             admin.database(appdb).ref(database.main + database.applicants + req.applicantKey + database.applicant.requirements + req.requirementKey)
-                .update({
+                .update(crypto.encrypt({
                     status: req.status
-                });
-            admin.database(appdb).ref(database.main + database.applicants + req.applicantKey).update({
+                }));
+            admin.database(appdb).ref(database.main + database.applicants + req.applicantKey).update(crypto.encrypt({
                 completion: newCompletion
-            });
+            }));
 
             var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
             var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
             var notificationKey = notifRef.push().key;
-            notifRef.child(notificationKey).update({
+            notifRef.child(notificationKey).update(crypto.encrypt({
                 applicant: req.applicant,
                 key: notificationKey,
                 time: time,
                 seen: false,
                 message: "Completed " + req.requirementName + ": " + req.applicant.email,
                 icon: "priority_high"
-            });
+            }));
 
             response.send({
                 message: request.body.requirementName + " completed"

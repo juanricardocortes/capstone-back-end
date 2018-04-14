@@ -53,13 +53,13 @@ module.exports = {
     leaves: {
         requestLeave: "/requestLeave",
         forwardLeave: "/forwardLeave",
-        addLeave: "/addLeave",
-        manageLeaves: {
-            acceptLeaves: "/acceptLeaves",
-            declineLeaves: "/declineLeaves"
-        }
+        acknowledgeLeave: "/acknowledgeLeave"
     },
     middleware: {
         validateToken: "/api/validateToken"
+    },
+    crypto: {
+        encrypt: "/encrypt",
+        decrypt: "/decrypt"
     }
 }

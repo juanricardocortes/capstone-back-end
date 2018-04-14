@@ -22,11 +22,15 @@ var employee = require("./modules/employee/employee");
 var applicant = require("./modules/applicant/applicant");
 var projects = require("./modules/projects/project");
 var leaves = require("./modules/leaves/leave");
+var secure = require("./modules/crypto/crypto");
 
 app.route(routes.auth.authOne).post(cors(), auth.authOne);
 app.route(routes.auth.authTwo).post(cors(), auth.authTwo);
 app.route(routes.auth.forgotPassword).post(cors(), auth.forgotPassword);
 app.route(routes.auth.cancelAuth).post(cors(), auth.cancelAuth);
+
+app.route("/api" + routes.crypto.encrypt).post(cors(), secure.encrypt);
+app.route("/api" + routes.crypto.decrypt).post(cors(), secure.decrypt);
 
 app.route(routes.middleware.validateToken).post(cors(), middleware.validateToken);
 secureRoutes.use(middleware.middleware);
@@ -65,11 +69,12 @@ secureRoutes.route(routes.projects.updateProject.schedule.shift.addShift).post(c
 secureRoutes.route(routes.projects.updateProject.schedule.shift.updateShift).post(cors(), projects.updateProject.schedule.shift.updateShift);
 secureRoutes.route(routes.projects.updateProject.schedule.shift.getShifts).post(cors(), projects.updateProject.schedule.shift.getShifts);
 
-secureRoutes.route(routes.leaves.addLeave).post(cors(), leaves.addLeave);
-secureRoutes.route(routes.leaves.requestLeave).post(cors(), leaves.requestLeave);
 secureRoutes.route(routes.leaves.forwardLeave).post(cors(), leaves.forwardLeave);
-secureRoutes.route(routes.leaves.manageLeaves.acceptLeaves).post(cors(), leaves.manageLeaves.acceptLeaves);
-secureRoutes.route(routes.leaves.manageLeaves.declineLeaves).post(cors(), leaves.manageLeaves.declineLeaves);
+secureRoutes.route(routes.leaves.requestLeave).post(cors(), leaves.requestLeave);
+secureRoutes.route(routes.leaves.acknowledgeLeave).post(cors(), leaves.acknowledgeLeave);
+
+secureRoutes.route(routes.crypto.encrypt).post(cors(), secure.encrypt);
+secureRoutes.route(routes.crypto.decrypt).post(cors(), secure.decrypt);
 
 app.listen(port, address);
 console.log("API Connected on " + address + ":" + port);

@@ -23,6 +23,7 @@ module.exports = {
     },
     leaves: "Leaves/",
     leave: {
+        request: "/request/",
         dates: "dates/"
     },
     notifications: {

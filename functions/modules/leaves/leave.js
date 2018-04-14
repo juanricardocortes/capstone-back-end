@@ -159,6 +159,9 @@ module.exports = {
         */
 
         var req = request.body;
+        req.request.isAcknowledgedByPL = req.isAccepted;
+        req.request.isAcceptedByPL = req.isAccepted;
+        req.request.ackByPL = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
         if (req.isAccepted) {
             var forwardedleaveref = admin.database(leavedb).ref(database.main + database.leaves);
             forwardedleaveref.child(req.request.leavekey).update({
@@ -166,12 +169,13 @@ module.exports = {
                 projectkey: req.projectkey,
                 request: req.request
             });
-            
+
             var requestedleaveref = admin.database(leavedb).ref(database.main + database.projects + req.projectkey + database.project.requests + req.request.leavekey);
             requestedleaveref.update({
                 isAcknowledgedByPL: true,
                 isAcceptedByPL: true,
-                status: "Forwarded to HR"
+                status: "Forwarded to HR",
+                ackByPL: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
             });
             response.send({
                 success: "success",
@@ -182,7 +186,8 @@ module.exports = {
             requestedleaveref.update({
                 isAcknowledgedByPL: true,
                 isAcceptedByPL: false,
-                status: "Declined by project lead"
+                status: "Declined by project lead",
+                ackByPL: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
             });
             response.send({
                 success: "error",
@@ -190,54 +195,52 @@ module.exports = {
             });
         }
     },
-    addLeave: function (request, response) {
+    acknowledgeLeave: function (request, response) {
         /*
             {
-                dates: {
-                    startDate: startDate,
-                    endDate: endDate
-                },
-                reason: reason,
-                type: type,
-                userkey: userkey
+                leave: leave,
+                isAccepted: isAccepted
             }
         */
         var req = request.body;
-        admin.database(leavedb).ref(database.main + database.employees + req.userkey).once('value').then(function (employeeData) {
-            var ref = admin.database(leavedb).ref(database.main + database.employees + req.userkey + database.employee.information + database.employee.projects);
-            ref.once('value').then(function (projects) {
-                var proj = iterate([projects.val()]);
-                for (var index = 0; index < proj.length; index++) {
-                    var projectleadKey = proj[index].projectLead;
-                    var leaveRef = admin.database(leavedb).ref(database.main + database.leaves + projectleadKey);
-                    var leaveKey = leaveRef.push().key;
-                    leaveRef.child(leaveKey).update({
-                        dates: {
-                            startDate: req.dates.startDate,
-                            endDate: req.dates.endDate
-                        },
-                        reason: req.reason,
-                        type: req.type,
-                        employee: employeeData.val()
-                    });
-                }
-                response.send({
-                    message: "Request sent",
-                    proj: proj
+        if (req.isAccepted) {
+            admin.database(leavedb).ref(database.main + database.leaves + req.leave.request.leavekey + database.leave.request)
+                .update({
+                    isAcknowledgedByHR: true,
+                    isAcceptedByHR: true,
+                    status: "Approved by HR",
+                    ackByHR: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
                 });
-            }).catch(function (err) {
-                response.send({
-                    message: err.message
+            admin.database(leavedb).ref(database.main + database.projects + req.leave.projectkey + database.project.requests + req.leave.request.leavekey)
+                .update({
+                    isAcknowledgedByHR: true,
+                    isAcceptedByHR: true,
+                    status: "Approved by HR",
+                    ackByHR: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
                 });
+            response.send({
+                success: "success",
+                message: "Leave approved"
             });
-        });
-    },
-    manageLeaves: {
-        acceptLeaves: function (request, response) {
-
-        },
-        declineLeaves: function (request, response) {
-
+        } else {
+            admin.database(leavedb).ref(database.main + database.leaves + req.leave.request.leavekey + database.leave.request)
+                .update({
+                    isAcknowledgedByHR: true,
+                    isAcceptedByHR: false,
+                    status: "Declined by HR",
+                    ackByHR: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
+                });
+            admin.database(leavedb).ref(database.main + database.projects + req.leave.projectkey + database.project.requests + req.leave.request.leavekey)
+                .update({
+                    isAcknowledgedByHR: true,
+                    isAcceptedByHR: false,
+                    status: "Declined by HR",
+                    ackByHR: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
+                });
+            response.send({
+                success: "error",
+                message: "Leave declined"
+            });
         }
     }
 }
