@@ -3,6 +3,8 @@ var database = require("../../strings/database");
 var constants = require("../../strings/constants");
 var admin = require("firebase-admin");
 var moment = require("moment");
+var crypto = require("../auth/crypto");
+var lodash = require("lodash");
 var serviceAccount = require("../google/serviceAccountKey.json");
 var projdb = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -96,28 +98,31 @@ module.exports = {
             var ref = admin.database(projdb).ref(database.main + database.projects);
             ref.once('value').then(function (snapshot) {
                 var allNames = getProjectNames(iterate([snapshot.val()]));
-                if (containsObject({
+                if (containsObject(crypto.encrypt({
                         name: project.name
-                    }, allNames)) {
+                    }), allNames)) {
                     response.send({
                         success: "error",
                         message: "Project with that name already exists"
                     });
                 } else {
                     var key = admin.database(projdb).ref().push().key;;
-                    ref.child(key).update({
+                    ref.child(key).update(crypto.encrypt({
                         name: project.name,
                         projectkey: key,
                         isArchived: false,
                         schedule: {
-                            dates: request.body.dates
+                            dates: {
+                                startDate: (moment(request.body.dates.startDate.split('T')[0]).add(1, "days")).format('YYYY-MM-DD'),
+                                endDate: (moment(request.body.dates.endDate.split('T')[0]).add(1, "days")).format('YYYY-MM-DD'),
+                            }
                         }
-                    });
+                    }));
 
                     var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                     var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                     var notificationKey = notifRef.push().key;
-                    notifRef.child(notificationKey).update({
+                    notifRef.child(notificationKey).update(crypto.encrypt({
                         project: {
                             name: project.name,
                             projectkey: key
@@ -127,7 +132,7 @@ module.exports = {
                         seen: false,
                         message: "Added: " + project.name,
                         icon: "priority_high"
-                    });
+                    }));
 
                     response.send({
                         success: "success",
@@ -153,9 +158,9 @@ module.exports = {
         if (decoded.isAdmin) {
             var projects = request.body.projects;
             for (var index = 0; index < projects.length; index++) {
-                admin.database(projdb).ref(database.main + database.projects + projects[index].projectkey).update({
+                admin.database(projdb).ref(database.main + database.projects + projects[index].projectkey).update(crypto.encrypt({
                     isArchived: (projects[index].isArchived)
-                });
+                }));
                 var key = admin.database(projdb).ref().push().key;
                 var message = "Unarchived";
                 if (projects[index].isArchived) {
@@ -165,7 +170,7 @@ module.exports = {
                 var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                 var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                 var notificationKey = notifRef.push().key;
-                notifRef.child(notificationKey).update({
+                notifRef.child(notificationKey).update(crypto.encrypt({
                     project: {
                         name: projects[index].name,
                         projectkey: projects[index].projectkey
@@ -175,7 +180,7 @@ module.exports = {
                     seen: false,
                     message: message + ": " + projects[index].name,
                     icon: "priority_high"
-                });
+                }));
             }
             response.send({
                 message: "Success"
@@ -199,14 +204,13 @@ module.exports = {
             var decoded = jwt.decode(request.body.token);
             if (decoded.isAdmin) {
                 var name = request.body.employee.files.lastname + ", " + request.body.employee.files.firstname;
-                request.body.employee.files = null;
-                var updateProjectLead = {
-                    projectlead: request.body.employee
-                }
+                var newEmployee = lodash.omit(request.body.employee, ['files']);
                 admin.database(projdb).ref(database.main + database.projects + request.body.projectkey)
-                    .update(updateProjectLead);
+                    .update(crypto.encrypt({
+                        projectlead: newEmployee
+                    }));
                 admin.database(projdb).ref(database.main + database.employees + request.body.employee.userkey + database.employee.information + database.employee.projects + request.body.projectkey)
-                    .update({
+                    .update(crypto.encrypt({
                         isProjectLead: true,
                         projectName: request.body.project.name,
                         projectKey: request.body.projectkey,
@@ -216,12 +220,12 @@ module.exports = {
                         shiftdetails: {
                             time: "08:00 AM - 05:00 PM"
                         }
-                    });
+                    }));
 
                 var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                 var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                 var notificationKey = notifRef.push().key;
-                notifRef.child(notificationKey).update({
+                notifRef.child(notificationKey).update(crypto.encrypt({
                     project: {
                         name: request.body.project.name,
                         projectkey: request.body.projectkey
@@ -231,7 +235,7 @@ module.exports = {
                     seen: false,
                     message: "Project lead for " + request.body.project.name + " " + name,
                     icon: "priority_high"
-                });
+                }));
 
                 response.send({
                     success: "success",
@@ -263,16 +267,16 @@ module.exports = {
                         var shiftdetails = req.shift;
                         var ref = admin.database(projdb).ref(database.main + database.projects + req.project.projectkey);
                         var pushKey = ref.push().key;
-                        ref.child(database.project.slots + pushKey).update({
+                        ref.child(database.project.slots + pushKey).update(crypto.encrypt({
                             shiftdetails: shiftdetails,
                             role: req.role,
                             slotkey: pushKey
-                        });
+                        }));
 
                         var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                         var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                         var notificationKey = notifRef.push().key;
-                        notifRef.child(notificationKey).update({
+                        notifRef.child(notificationKey).update(crypto.encrypt({
                             project: {
                                 name: req.project.name,
                                 projectkey: req.project.projectkey
@@ -282,7 +286,7 @@ module.exports = {
                             seen: false,
                             message: "Added a " + req.role + " role in " + req.project.name,
                             icon: "priority_high"
-                        });
+                        }));
 
                         response.send({
                             success: "success",
@@ -346,9 +350,9 @@ module.exports = {
                     // var employee = empdata.val();
                     var ref = admin.database(projdb).ref(database.main + database.projects + req.project.projectkey);
 
-                    if (!containsObject({
+                    if (!containsObject(crypto.encrypt({
                             userkey: req.employee.userkey
-                        }, getProjectMembers(iterate([req.project.members])))) {
+                        }), getProjectMembers(iterate([req.project.members])))) {
 
                         var overlapError = false;
                         var overlapErrorMessage = "";
@@ -387,7 +391,7 @@ module.exports = {
                                 message: overlapErrorMessage
                             });
                         } else {
-                            empref.child(database.employee.information + database.employee.projects + req.project.projectkey).update({
+                            empref.child(database.employee.information + database.employee.projects + req.project.projectkey).update(crypto.encrypt({
                                 role: req.slot.role,
                                 slotKey: req.slot.slotkey,
                                 projectKey: req.project.projectkey,
@@ -396,19 +400,19 @@ module.exports = {
                                 shiftdetails: req.slot.shiftdetails,
                                 dates: req.project.schedule.dates,
                                 isProjectLead: isProjectLead
-                            }).then(function () {
+                            })).then(function () {
 
                                 var name = req.employee.files.lastname + ", " + req.employee.files.firstname;
-                                ref.child(database.project.slots + req.slot.slotkey).update({
+                                ref.child(database.project.slots + req.slot.slotkey).update(crypto.encrypt({
                                     currentholder: req.employee
-                                });
-                                ref.child(database.project.members + req.employee.userkey).update(req.employee);
+                                }));
+                                ref.child(database.project.members + req.employee.userkey).update(crypto.encrypt(req.employee));
                                 // ref.child(database.project.schedule + database.project.shifts + req.slot.shiftdetails.shiftkey + database.project.employees + req.employee.userkey)
                                 //     .update(req.employee);
                                 var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                                 var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                                 var notificationKey = notifRef.push().key;
-                                notifRef.child(notificationKey).update({
+                                notifRef.child(notificationKey).update(crypto.encrypt({
                                     project: {
                                         name: req.project.name,
                                         projectkey: req.project.projectkey
@@ -418,7 +422,7 @@ module.exports = {
                                     seen: false,
                                     message: "Added " + name + " in " + req.project.name,
                                     icon: "priority_high"
-                                });
+                                }));
 
                                 response.send({
                                     success: "success",
@@ -564,9 +568,9 @@ module.exports = {
                     admin.database(projdb).ref(database.main + database.projects + req.project.projectkey + database.project.schedule + database.project.shifts)
                         .once('value').then(function (snapshot) {
                             var allShifts = getShifts(iterate([snapshot.val()]));
-                            if (containsObject({
+                            if (containsObject(crypto.encrypt({
                                     time: req.time
-                                }, allShifts)) {
+                                }), allShifts)) {
                                 response.send({
                                     success: "error",
                                     message: "Shift with that time already exists"
@@ -576,15 +580,15 @@ module.exports = {
                                     var ref = admin.database(projdb).ref(database.main + database.projects);
                                     var pushKey = ref.push().key;
                                     ref.child(req.project.projectkey + database.project.schedule + database.project.shifts + pushKey)
-                                        .update({
+                                        .update(crypto.encrypt({
                                             time: req.time,
                                             shiftkey: pushKey
-                                        });
+                                        }));
 
                                     var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                                     var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                                     var notificationKey = notifRef.push().key;
-                                    notifRef.child(notificationKey).update({
+                                    notifRef.child(notificationKey).update(crypto.encrypt({
                                         project: {
                                             name: req.project.name,
                                             projectkey: req.project.projectkey
@@ -594,7 +598,7 @@ module.exports = {
                                         seen: false,
                                         message: "Added shift " + req.time + " in " + req.project.name,
                                         icon: "priority_high"
-                                    });
+                                    }));
 
                                     response.send({
                                         success: "success",

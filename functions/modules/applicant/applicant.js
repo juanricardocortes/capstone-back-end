@@ -251,10 +251,8 @@ module.exports = {
         var req = request.body;
         var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
-            console.log(req.completion);
             var newCompletion = req.completion + ((1 / (req.totalRequirements)) * 100)
-            admin.database(appdb).ref(database.main + database.applicants + req.applicantKey + database.applicant.requirements + req.requirementKey)
-                .update(crypto.encrypt({
+            admin.database(appdb).ref(database.main + database.applicants + req.applicantKey + database.applicant.requirements + req.requirementKey).update(crypto.encrypt({
                     status: req.status
                 }));
             admin.database(appdb).ref(database.main + database.applicants + req.applicantKey).update(crypto.encrypt({

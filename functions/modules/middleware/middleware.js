@@ -8,9 +8,13 @@ module.exports = {
         var token = request.body.token || request.headers["token"];
         if (token) {
             var jsonSignature = lodash.omit(JSON.parse(request.body.signature), ['pin', 'isAdmin', 'isArchived', 'files', 'password']);
-            var stringSignature = JSON.stringify(jsonSignature);
+            var stringSignature = JSON.stringify({
+                email: jsonSignature.email,
+                userkey: jsonSignature.userkey
+            });
             jwt.verify(token, (stringSignature + process.env.SECRET_KEY), function (err, decode) {
                 if (err) {
+                    console.log(err.message);
                     response.json({
                         message: "Invalid token",
                         success: false
@@ -30,7 +34,10 @@ module.exports = {
         var token = request.body.token;
         if (token) {
             var jsonSignature = lodash.omit(JSON.parse(request.body.signature), ['pin', 'isAdmin', 'isArchived', 'files', 'password']);
-            var stringSignature = JSON.stringify(jsonSignature);
+            var stringSignature = JSON.stringify({
+                email: jsonSignature.email,
+                userkey: jsonSignature.userkey
+            });
             jwt.verify(token, (stringSignature + process.env.SECRET_KEY), function (err, decode) {
                 if (err) {
                     response.json({

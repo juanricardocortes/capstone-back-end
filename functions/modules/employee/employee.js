@@ -105,7 +105,15 @@ module.exports = {
                                 firstname: employee[index].firstname,
                                 lastname: employee[index].lastname,
                                 image: employee[index].image,
-                                birthdate: employee[index].birthdate
+                                birthdate: employee[index].birthdate,
+                                leaves: {
+                                    sickleave: {
+                                        remaining: 7
+                                    },
+                                    vacationleave: {
+                                        remaining: 7
+                                    }
+                                }
                             }
                         }));
                         if (request.body.hireFrom === "applicants") {
@@ -198,7 +206,7 @@ module.exports = {
     },
     getEmployee: function (request, response) {
         admin.database(empdb).ref(database.main + database.employees + request.body.userkey).once("value").then(function (employee) {
-            response.send(employee.val());
+            response.send(crypto.decrypt(employee.val()));
         });
     },
     uploadEmployeeImage: function (request, response) {
