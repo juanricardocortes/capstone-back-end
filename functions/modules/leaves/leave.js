@@ -82,7 +82,9 @@ function requestRegularAddLeave(req, project) {
             leavekey: newLeave,
             isAcknowledgedByPL: false,
             isAcceptedByPL: false,
-            isAcknowledgedByHR: false
+            isAcknowledgedByHR: false,
+            status: "Forwarded to project lead",
+            time: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
         },
         projectname: project.name,
         projectkey: project.projectkey
@@ -124,7 +126,9 @@ function requestBeforeAddLeave(req, project) {
             leavekey: newLeave,
             isAcknowledgedByPL: false,
             isAcceptedByPL: false,
-            isAcknowledgedByHR: false
+            isAcknowledgedByHR: false,
+            status: "Forwarded to project lead",
+            time: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
         },
         projectname: project.name,
         projectkey: project.projectkey
@@ -166,7 +170,9 @@ function requestAfterAddLeave(req, project) {
             leavekey: newLeave,
             isAcknowledgedByPL: false,
             isAcceptedByPL: false,
-            isAcknowledgedByHR: false
+            isAcknowledgedByHR: false,
+            status: "Forwarded to project lead",
+            time: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
         },
         projectname: project.name,
         projectkey: project.projectkey
@@ -209,8 +215,11 @@ module.exports = {
         var project = req.projects;
         var isOverlapping = false;
         var hasNoProjects = false;
+        var hasProjects = false;
+
         req.request.startDate = (moment(req.request.startDate.split('T')[0]).add(1, "days")).format('YYYY-MM-DD');
         req.request.endDate = (moment(req.request.endDate.split('T')[0]).add(1, "days")).format('YYYY-MM-DD')
+
         console.log(moment(req.request.startDate).format('YYYY-MM-DD') + " - " + moment(req.request.endDate).format('YYYY-MM-DD'));
         var leaveindex = req.request.type.replace(/\s+/g, '').toLowerCase();
         if (numberofdays > req.employee.files.leaves[leaveindex].remaining) {
@@ -218,8 +227,7 @@ module.exports = {
                 success: "error",
                 message: "You do not have enough days for that kind of leave"
             })
-        } 
-        else {
+        } else {
             req.employee.files = lodash.omit(req.employee.files, ['projects', 'leaves']);
             for (var index = 0; index < project.length; index++) {
                 try {
@@ -228,6 +236,7 @@ module.exports = {
                             moment(req.request.startDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
                             moment(req.request.endDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
                             moment(req.request.endDate).isSameOrBefore(project[index].schedule.dates.endDate))) {
+                        hasProjects = true;
                         isOverlapping = checkOverlapping(req, project[index].requests);
                         if (isOverlapping) {
                             console.log("ADMIN OVERLAP");
@@ -239,6 +248,8 @@ module.exports = {
                         (moment(req.request.startDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
                             moment(req.request.startDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
                             moment(req.request.endDate).isAfter(project[index].schedule.dates.endDate))) {
+                                hasProjects = true;
+                        isOverlapping = checkOverlapping(req, project[index].requests);
                         if (isOverlapping) {
                             console.log("ADMIN OVERLAP");
                             break;
@@ -249,6 +260,8 @@ module.exports = {
                         (moment(req.request.endDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
                             moment(req.request.endDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
                             moment(req.request.startDate).isBefore(project[index].schedule.dates.endDate))) {
+                                hasProjects = true;
+                        isOverlapping = checkOverlapping(req, project[index].requests);
                         if (isOverlapping) {
                             console.log("ADMIN OVERLAP");
                             break;
@@ -259,7 +272,8 @@ module.exports = {
                             moment(req.request.startDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
                             moment(req.request.endDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
                             moment(req.request.endDate).isSameOrBefore(project[index].schedule.dates.endDate))) {
-                        isOverlapping = checkOverlapping(req, project[index].requests);
+                                hasProjects = true;
+                                isOverlapping = checkOverlapping(req, project[index].requests);
                         if (isOverlapping) {
                             console.log("MEMBER OVERLAP");
                             break;
@@ -271,6 +285,8 @@ module.exports = {
                         (moment(req.request.startDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
                             moment(req.request.startDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
                             moment(req.request.endDate).isAfter(project[index].schedule.dates.endDate))) {
+                                hasProjects = true;
+                        isOverlapping = checkOverlapping(req, project[index].requests);
                         if (isOverlapping) {
                             console.log("MEMBER OVERLAP");
                             break;
@@ -281,6 +297,8 @@ module.exports = {
                         (moment(req.request.endDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
                             moment(req.request.endDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
                             moment(req.request.startDate).isBefore(project[index].schedule.dates.endDate))) {
+                                hasProjects = true;
+                        isOverlapping = checkOverlapping(req, project[index].requests);
                         if (isOverlapping) {
                             console.log("MEMBER OVERLAP");
                             break;
@@ -295,13 +313,11 @@ module.exports = {
                         }
                     }
                 } catch (err) {
-                    console.log(err);
                     console.log(err.message);
-                    hasNoProjects = false;
                     console.log("No project leaders for this project yet");
                 }
             }
-            if (hasNoProjects) {
+            if (!hasProjects) {
                 isOverlapping = checkOverlappingNP(req, req.leaves);
                 if (!isOverlapping) {
                     var forwardedleaveref = admin.database(leavedb).ref(database.main + database.leaves);
@@ -315,7 +331,9 @@ module.exports = {
                             request: req.request,
                             isAcknowledgedByPL: true,
                             isAcceptedByPL: true,
-                            isAcknowledgedByHR: false
+                            isAcknowledgedByHR: false,
+                            status: "Forwarded to HR",
+                            time: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
                         },
                         status: "Forwaded to HR"
                     }));
@@ -358,7 +376,10 @@ module.exports = {
         req.request.isAcknowledgedByPL = req.isAccepted;
         req.request.isAcceptedByPL = req.isAccepted;
         req.request.ackByPL = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+        req.request.time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+        
         if (req.isAccepted) {
+            req.request.status = "Forwarded to HR";
             var forwardedleaveref = admin.database(leavedb).ref(database.main + database.leaves);
             forwardedleaveref.child(req.request.leavekey).update(crypto.encrypt({
                 projectname: req.name,
@@ -391,6 +412,14 @@ module.exports = {
                 message: req.request.request.type + " for " + req.name + " forwarded to HR"
             });
         } else {
+            req.request.status = "Declined by project lead";
+            var forwardedleaveref = admin.database(leavedb).ref(database.main + database.leaves);
+            forwardedleaveref.child(req.request.leavekey).update(crypto.encrypt({
+                projectname: req.name,
+                projectkey: req.projectkey,
+                request: req.request
+            }));
+
             var requestedleaveref = admin.database(leavedb).ref(database.main + database.projects + req.projectkey + database.project.requests + req.request.leavekey);
             requestedleaveref.update(crypto.encrypt({
                 isAcknowledgedByPL: true,

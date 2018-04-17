@@ -126,34 +126,44 @@ module.exports = {
         ref.once('value').then(function (snapshot) {
             var credentials = iterate([snapshot.val()]);
             for (var index = 0; index < credentials.length; index++) {
-                if (request.body.email === credentials[index].email) {
-                    password = credentials[index].password;
+                if (crypto.encryptVar(request.body.email) === credentials[index].email) {
+                    password = crypto.decryptVar(credentials[index].password);
                 }
             }
-            nodemailer.createTestAccount((err, account) => {
-                var transporter = nodemailer.createTransport({
-                    service: 'Gmail',
-                    auth: {
-                        user: constants.username,
-                        pass: constants.password
-                    }
-                });
-                var mailOptions = {
-                    from: '"QWERTY" <noreply@gmail.com>',
-                    to: request.body.email,
-                    subject: 'Forgot password',
-                    text: "Your password is " + password
-                };
-                transporter.sendMail(mailOptions, (error, info) => {
-                    if (error) {
-                        return console.log(error);
-                    }
-                });
-
+            if (password === "something") {
                 response.send({
-                    message: "Your password was sent to your email, please change your password as soon as possible"
+                    success: "error",
+                    message: "No user found with that email"
+                })
+            } else {
+                nodemailer.createTestAccount((err, account) => {
+                    var transporter = nodemailer.createTransport({
+                        service: 'Gmail',
+                        auth: {
+                            user: constants.username,
+                            pass: constants.password
+                        }
+                    });
+                    var mailOptions = {
+                        from: '"QWERTY" <noreply@gmail.com>',
+                        to: request.body.email,
+                        subject: 'Forgot password',
+                        text: "Your password is " + password
+                    };
+                    transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            return console.log(error);
+                        }
+                    });
+
+                    response.send({
+                        success: "success",
+                        message: "Your password was sent to your email",
+                        text: "Please change your password as soon as possible"
+                    });
                 });
-            });
+            }
+
         });
     },
     changePassword: function (request, response) {
