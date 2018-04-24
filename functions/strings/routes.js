@@ -33,6 +33,7 @@ module.exports = {
                     deleteSlot: "/deleteSlot"
                 },
                 addMembers: "/addMembers",
+                removeMember: "/removeMember",
                 updateMembers: "/updateMembers"
             },
             schedule: {
@@ -61,5 +62,11 @@ module.exports = {
     crypto: {
         encrypt: "/encrypt",
         decrypt: "/decrypt"
+    },
+    exam: {
+        logApplicant: "/api/logApplicant",
+        addQuestion: "/api/addQuestion",
+        getQuestions: "/api/getQuestions",
+        submitExam: "/api/submitExam"
     }
 }

@@ -100,18 +100,51 @@ module.exports = {
                             isArchived: false,
                             completion: 0,
                             hired: false,
+                            dateapplied: moment().format("dddd, MMMM Do YYYY, h:mm:ss a"),
                             birthdate: applicant[index].birthdate,
                             contactNumber: applicant[index].contact,
                             address: applicant[index].address,
+                            exam: "-",
+                            tookExam: false,
                             requirements: {
-                                reqOne: {
-                                    key: "reqOne",
-                                    name: "Birth Certificate",
+                                one: {
+                                    key: "one",
+                                    name: "NSO Birth Certificate",
                                     status: "incomplete"
                                 },
-                                reqTwo: {
-                                    key: "reqTwo",
-                                    name: "Valid ID",
+                                two: {
+                                    key: "two",
+                                    name: "NBI Clearance",
+                                    status: "incomplete"
+                                },
+                                three: {
+                                    key: "three",
+                                    name: "Medical",
+                                    status: "incomplete"
+                                },
+                                four: {
+                                    key: "four",
+                                    name: "SSS",
+                                    status: "incomplete"
+                                },
+                                five: {
+                                    key: "five",
+                                    name: "HDMF",
+                                    status: "incomplete"
+                                },
+                                six: {
+                                    key: "six",
+                                    name: "Philhealth",
+                                    status: "incomplete"
+                                },
+                                seven: {
+                                    key: "seven",
+                                    name: "Interview",
+                                    status: "incomplete"
+                                },
+                                eight: {
+                                    key: "eight",
+                                    name: "TIN",
                                     status: "incomplete"
                                 }
                             }
@@ -251,7 +284,10 @@ module.exports = {
         var req = request.body;
         var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
-            var newCompletion = req.completion + ((1 / (req.totalRequirements)) * 100)
+            var newCompletion = Math.ceil(req.completion + ((1 / (req.totalRequirements)) * 100));
+            if(newCompletion > 100) {
+                newCompletion = 100;
+            }
             admin.database(appdb).ref(database.main + database.applicants + req.applicantKey + database.applicant.requirements + req.requirementKey).update(crypto.encrypt({
                     status: req.status
                 }));

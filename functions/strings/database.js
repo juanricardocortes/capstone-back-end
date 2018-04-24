@@ -4,7 +4,9 @@ module.exports = {
     employee: {
         information: "/files/",
         projects: "projects/",
-        leaves: "leaves/"
+        leaves: "leaves/",
+        dates: "/dates/",
+        assigned: "assigned/",
     },
     applicants: "Applicants/",
     applicant: {
@@ -19,7 +21,8 @@ module.exports = {
         shifts: "shifts/",
         dates: "dates/",
         employees: "/employees/",
-        requests: "/requests/"
+        requests: "/requests/",
+        currentholder: "/currentholder/"
     },
     leaves: "Leaves/",
     leave: {
@@ -31,5 +34,6 @@ module.exports = {
         employees: "Notifications/Employees/",
         projects: "Notifications/Projects/",
         leaves: "Notifications/Leaves"
-    }
+    },
+    exam: "Exam/"
 }

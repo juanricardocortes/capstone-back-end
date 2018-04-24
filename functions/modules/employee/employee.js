@@ -98,6 +98,9 @@ module.exports = {
                             isAdmin: false,
                             isArchived: false,
                             files: {
+                                assigned: {
+                                    isAssigned: false
+                                },
                                 employeeid: employeeid,
                                 datehired: dateHired,
                                 address: employee[index].address,
@@ -108,10 +111,24 @@ module.exports = {
                                 birthdate: employee[index].birthdate,
                                 leaves: {
                                     sickleave: {
+                                        leavekey: "Sick leave",
                                         remaining: 7
                                     },
                                     vacationleave: {
+                                        leavekey: "Vacation leave",
                                         remaining: 7
+                                    },
+                                    emergencyleave: {
+                                        leavekey: "Emergency leave",
+                                        remaining: 7
+                                    },
+                                    singleparentleave: {
+                                        leavekey: "Single parent leave",
+                                        remaining: 7
+                                    },
+                                    serviceincentiveleave: {
+                                        leavekey: "Service incentive leave",
+                                        remaining: 5
                                     }
                                 }
                             }

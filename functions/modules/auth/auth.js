@@ -167,11 +167,24 @@ module.exports = {
         });
     },
     changePassword: function (request, response) {
-        admin.database(authdb).ref(database.main + database.employees + request.body.userkey).update({
-            password: request.body.newPassword
-        });
+        var req = request.body;
+        admin.database(authdb).ref(database.main + database.employees + req.user.userkey).update(crypto.encrypt({
+            password: req.newPassword
+        }));
+        
+        admin.auth(authdb).updateUser(req.firebaseUser.uid, {
+                password: req.newPassword
+            })
+            .then(function (userRecord) {
+                // See the UserRecord reference doc for the contents of userRecord.
+                // console.log("Successfully updated user", userRecord.toJSON());
+            })
+            .catch(function (error) {
+                // console.log("Error updating user:", error);
+            });
         response.send({
-            message: "Success"
+            message: "Password changed",
+            success: "success"
         });
     }
 }

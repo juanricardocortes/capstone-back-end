@@ -114,7 +114,7 @@ module.exports = {
                         schedule: {
                             dates: {
                                 startDate: (moment(request.body.dates.startDate.split('T')[0]).add(1, "days")).format('YYYY-MM-DD'),
-                                endDate: (moment(request.body.dates.endDate.split('T')[0]).add(1, "days")).format('YYYY-MM-DD'),
+                                // endDate: (moment(request.body.dates.endDate.split('T')[0]).add(1, "days")).format('YYYY-MM-DD'),
                             }
                         }
                     }));
@@ -202,7 +202,17 @@ module.exports = {
                 }
             */
             var decoded = jwt.decode(request.body.token);
+            var req = request.body;
             if (decoded.isAdmin) {
+                if (req.project.projectlead) {
+                    admin.database(projdb).ref(database.main + database.employees + req.project.projectlead.userkey + database.employee.information + database.employee.assigned).update(crypto.encrypt({
+                        isAssigned: false
+                    }));
+                    admin.database(projdb).ref(database.main + database.employees + req.project.projectlead.userkey + database.employee.information + database.employee.projects + req.project.projectkey + database.employee.dates).update(crypto.encrypt({
+                        endDate: moment().format('YYYY-MM-DD')
+                    }));
+                }
+
                 var name = request.body.employee.files.lastname + ", " + request.body.employee.files.firstname;
                 var newEmployee = lodash.omit(request.body.employee, ['files']);
                 admin.database(projdb).ref(database.main + database.projects + request.body.projectkey)
@@ -214,13 +224,19 @@ module.exports = {
                         isProjectLead: true,
                         projectName: request.body.project.name,
                         projectKey: request.body.projectkey,
-                        dates: request.body.project.schedule.dates,
+                        dates: {
+                            startDate: moment().format('YYYY-MM-DD')
+                        },
                         projectLead: request.body.employee.userkey,
                         role: "Project leader",
                         shiftdetails: {
                             time: "08:00 AM - 05:00 PM"
                         }
                     }));
+                admin.database(projdb).ref(database.main + database.employees + request.body.employee.userkey + database.employee.information + database.employee.assigned).update(crypto.encrypt({
+                    isAssigned: true,
+                    projectkey: req.project.projectkey
+                }));
 
                 var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                 var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
@@ -263,7 +279,14 @@ module.exports = {
                     */
                     var decoded = jwt.decode(request.body.token);
                     var req = request.body;
-                    if (req.project.projectlead.userkey === req.employee.userkey) {
+                    var isProjectLead = false;
+                    try {
+                        if (req.project.projectlead.userkey === req.user.userkey) {
+                            isProjectLead = true;
+                        }
+                    } catch (err) {}
+                    // if (req.project.projectlead.userkey === req.employee.userkey || decoded.isAdmin) {
+                    if (decoded.isAdmin || isProjectLead) {
                         var shiftdetails = req.shift;
                         var ref = admin.database(projdb).ref(database.main + database.projects + req.project.projectkey);
                         var pushKey = ref.push().key;
@@ -284,7 +307,7 @@ module.exports = {
                             key: notificationKey,
                             time: time,
                             seen: false,
-                            message: "Added a " + req.role + " role in " + req.project.name,
+                            message: req.employee.files.lastname + ", " + req.employee.files.firstname + " added a " + req.role + " role in " + req.project.name,
                             icon: "priority_high"
                         }));
 
@@ -329,6 +352,26 @@ module.exports = {
                         })
                 }
             },
+            removeMember: function (request, response) {
+                var decoded = jwt.decode(request.body.token);
+                var req = request.body;
+                if (decoded.isAdmin) {
+                    admin.database(projdb).ref(database.main + database.projects + req.projectkey + database.project.slots + req.slotkey).update({
+                        currentholder: null
+                    })
+                    admin.database(projdb).ref(database.main + database.projects + req.projectkey + database.project.members + req.employee.userkey).remove();
+                    admin.database(projdb).ref(database.main + database.employees + req.employee.userkey + database.employee.information + database.employee.assigned).update(crypto.encrypt({
+                        isAssigned: false
+                    }))
+                    admin.database(projdb).ref(database.main + database.employees + req.employee.userkey + database.employee.information + database.employee.projects + req.projectkey + database.employee.dates).update(crypto.encrypt({
+                        endDate: moment().format('YYYY-MM-DD')
+                    }))
+                    response.send({
+                        message: req.employee.files.lastname + " removed",
+                        success: "success"
+                    })
+                }
+            },
             addMembers: function (request, response) {
                 /*
                     {
@@ -344,10 +387,18 @@ module.exports = {
                  */
                 var decoded = jwt.decode(request.body.token);
                 var req = request.body;
-                if (req.project.projectlead.userkey === req.user.userkey) {
-
+                var isProjectLead = false;
+                try {
+                    if (req.project.projectlead.userkey === req.user.userkey) {
+                        isProjectLead = true;
+                    } else {
+                        isProjectLead = false;
+                    }
+                } catch (err) {
+                    isProjectLead = false;
+                }
+                if (decoded.isAdmin || isProjectLead) {
                     var empref = admin.database(projdb).ref(database.main + database.employees + req.employee.userkey);
-                    // var employee = empdata.val();
                     var ref = admin.database(projdb).ref(database.main + database.projects + req.project.projectkey);
 
                     if (!containsObject(crypto.encrypt({
@@ -369,19 +420,19 @@ module.exports = {
                                         isProjectLead = false;
                                     }
                                 }
-                                if (project.dates) {
-                                    if ((moment(project.dates.startDate).isSameOrBefore(req.project.schedule.dates.endDate) &&
-                                            moment(project.dates.startDate).isSameOrAfter(req.project.schedule.dates.startDate)) ||
-                                        (moment(project.dates.endDate).isSameOrBefore(req.project.schedule.dates.endDate) &&
-                                            moment(project.dates.endDate).isSameOrAfter(req.project.schedule.dates.startDate))) {
-                                        var overlapError = true;
-                                        if (overlapErrorMessage === "") {
-                                            overlapErrorMessage = "Overlaps with schedule on: [" + project.projectName + "]";
-                                        } else {
-                                            overlapErrorMessage += ", [" + project.projectName + "]";
-                                        }
-                                    }
-                                }
+                                // if (project.dates) {
+                                //     if ((moment(project.dates.startDate).isSameOrBefore(req.project.schedule.dates.endDate) &&
+                                //             moment(project.dates.startDate).isSameOrAfter(req.project.schedule.dates.startDate)) ||
+                                //         (moment(project.dates.endDate).isSameOrBefore(req.project.schedule.dates.endDate) &&
+                                //             moment(project.dates.endDate).isSameOrAfter(req.project.schedule.dates.startDate))) {
+                                //         var overlapError = true;
+                                //         if (overlapErrorMessage === "") {
+                                //             overlapErrorMessage = "Overlaps with schedule on: [" + project.projectName + "]";
+                                //         } else {
+                                //             overlapErrorMessage += ", [" + project.projectName + "]";
+                                //         }
+                                //     }
+                                // }
                             }
                         } catch (err) {}
 
@@ -391,6 +442,10 @@ module.exports = {
                                 message: overlapErrorMessage
                             });
                         } else {
+                            empref.child(database.employee.information + database.employee.assigned).update(crypto.encrypt({
+                                isAssigned: true,
+                                projectkey: req.project.projectkey
+                            }));
                             empref.child(database.employee.information + database.employee.projects + req.project.projectkey).update(crypto.encrypt({
                                 role: req.slot.role,
                                 slotKey: req.slot.slotkey,
@@ -398,17 +453,18 @@ module.exports = {
                                 projectName: req.project.name,
                                 projectLead: req.project.projectlead.userkey,
                                 shiftdetails: req.slot.shiftdetails,
-                                dates: req.project.schedule.dates,
+                                dates: {
+                                    startDate: moment().format('YYYY-MM-DD')
+                                },
                                 isProjectLead: isProjectLead
                             })).then(function () {
-
+                                req.employee.files = lodash.omit(req.employee.files, ['leaves', 'projects', 'assigned']);
                                 var name = req.employee.files.lastname + ", " + req.employee.files.firstname;
                                 ref.child(database.project.slots + req.slot.slotkey).update(crypto.encrypt({
                                     currentholder: req.employee
                                 }));
                                 ref.child(database.project.members + req.employee.userkey).update(crypto.encrypt(req.employee));
-                                // ref.child(database.project.schedule + database.project.shifts + req.slot.shiftdetails.shiftkey + database.project.employees + req.employee.userkey)
-                                //     .update(req.employee);
+
                                 var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
                                 var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                                 var notificationKey = notifRef.push().key;
@@ -576,7 +632,14 @@ module.exports = {
                                     message: "Shift with that time already exists"
                                 });
                             } else {
-                                if (req.project.projectlead.userkey === req.employee.userkey) {
+                                var isProjectLead = false;
+                                try {
+                                    if (req.project.projectlead.userkey === req.user.userkey) {
+                                        isProjectLead = true;
+                                    }
+                                } catch (err) {}
+                                // if (req.project.projectlead.userkey === req.employee.userkey || decoded.isAdmin) {
+                                if (decoded.isAdmin || isProjectLead) {
                                     var ref = admin.database(projdb).ref(database.main + database.projects);
                                     var pushKey = ref.push().key;
                                     ref.child(req.project.projectkey + database.project.schedule + database.project.shifts + pushKey)

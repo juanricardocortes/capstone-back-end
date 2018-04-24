@@ -108,95 +108,6 @@ function requestRegularAddLeave(req, project) {
     }));
 }
 
-function requestBeforeAddLeave(req, project) {
-    var newLeave = admin.database(leavedb).ref().push().key;
-    admin.database(leavedb).ref(database.main + database.leaves + newLeave).update(crypto.encrypt({
-        request: {
-            employee: req.employee,
-            request: {
-                startDate: project.schedule.dates.startDate,
-                endDate: req.request.endDate,
-                type: req.request.type,
-                reason: req.request.reason
-            },
-            affected: {
-                startDate: project.schedule.dates.startDate,
-                endDate: req.request.endDate
-            },
-            leavekey: newLeave,
-            isAcknowledgedByPL: false,
-            isAcceptedByPL: false,
-            isAcknowledgedByHR: false,
-            status: "Forwarded to project lead",
-            time: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
-        },
-        projectname: project.name,
-        projectkey: project.projectkey
-    }))
-    admin.database(leavedb).ref(database.main + database.projects + project.projectkey +
-        database.project.requests + newLeave).update(crypto.encrypt({
-        employee: req.employee,
-        request: {
-            startDate: project.schedule.dates.startDate,
-            endDate: req.request.endDate,
-            type: req.request.type,
-            reason: req.request.reason
-        },
-        affected: {
-            startDate: project.schedule.dates.startDate,
-            endDate: req.request.endDate
-        },
-        leavekey: newLeave,
-        isAcknowledgedByPL: false,
-        isAcknowledgedByHR: false,
-    }));
-}
-
-function requestAfterAddLeave(req, project) {
-    var newLeave = admin.database(leavedb).ref().push().key;
-    admin.database(leavedb).ref(database.main + database.leaves + newLeave).update(crypto.encrypt({
-        request: {
-            employee: req.employee,
-            request: {
-                startDate: req.request.startDate,
-                endDate: project.schedule.dates.endDate,
-                type: req.request.type,
-                reason: req.request.reason
-            },
-            affected: {
-                startDate: req.request.startDate,
-                endDate: project.schedule.dates.endDate
-            },
-            leavekey: newLeave,
-            isAcknowledgedByPL: false,
-            isAcceptedByPL: false,
-            isAcknowledgedByHR: false,
-            status: "Forwarded to project lead",
-            time: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
-        },
-        projectname: project.name,
-        projectkey: project.projectkey
-    }))
-    admin.database(leavedb).ref(database.main + database.projects + project.projectkey +
-        database.project.requests + newLeave).update(crypto.encrypt({
-        employee: req.employee,
-        request: {
-            startDate: req.request.startDate,
-            endDate: project.schedule.dates.endDate,
-            type: req.request.type,
-            reason: req.request.reason
-        },
-        affected: {
-            startDate: req.request.startDate,
-            endDate: project.schedule.dates.endDate
-        },
-        leavekey: newLeave,
-        isAcknowledgedByPL: false,
-        isAcknowledgedByHR: false,
-    }));
-}
-
-
 module.exports = {
     requestLeave: function (request, response) {
         /*
@@ -229,92 +140,32 @@ module.exports = {
             })
         } else {
             req.employee.files = lodash.omit(req.employee.files, ['projects', 'leaves']);
-            for (var index = 0; index < project.length; index++) {
-                try {
-                    if (project[index].projectlead.userkey === req.employee.userkey &&
-                        (moment(req.request.startDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
-                            moment(req.request.startDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
-                            moment(req.request.endDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
-                            moment(req.request.endDate).isSameOrBefore(project[index].schedule.dates.endDate))) {
-                        hasProjects = true;
-                        isOverlapping = checkOverlapping(req, project[index].requests);
-                        if (isOverlapping) {
-                            console.log("ADMIN OVERLAP");
-                            break;
-                        } else {
-                            requestRegularAddLeave(req, project[index]);
-                        }
-                    } else if (project[index].projectlead.userkey === req.employee.userkey &&
-                        (moment(req.request.startDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
-                            moment(req.request.startDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
-                            moment(req.request.endDate).isAfter(project[index].schedule.dates.endDate))) {
-                                hasProjects = true;
-                        isOverlapping = checkOverlapping(req, project[index].requests);
-                        if (isOverlapping) {
-                            console.log("ADMIN OVERLAP");
-                            break;
-                        } else {
-                            requestAfterAddLeave(req, project[index]);
-                        }
-                    } else if (project[index].projectlead.userkey === req.employee.userkey &&
-                        (moment(req.request.endDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
-                            moment(req.request.endDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
-                            moment(req.request.startDate).isBefore(project[index].schedule.dates.endDate))) {
-                                hasProjects = true;
-                        isOverlapping = checkOverlapping(req, project[index].requests);
-                        if (isOverlapping) {
-                            console.log("ADMIN OVERLAP");
-                            break;
-                        } else {
-                            requestBeforeAddLeave(req, project[index]);
-                        }
-                    } else if (isMember(req.employee.userkey, project[index].members) && (moment(req.request.startDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
-                            moment(req.request.startDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
-                            moment(req.request.endDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
-                            moment(req.request.endDate).isSameOrBefore(project[index].schedule.dates.endDate))) {
-                                hasProjects = true;
-                                isOverlapping = checkOverlapping(req, project[index].requests);
-                        if (isOverlapping) {
-                            console.log("MEMBER OVERLAP");
-                            break;
-                        } else {
-                            requestRegularAddLeave(req, project[index]);
-                            break;
-                        }
-                    } else if (isMember(req.employee.userkey, project[index].members) &&
-                        (moment(req.request.startDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
-                            moment(req.request.startDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
-                            moment(req.request.endDate).isAfter(project[index].schedule.dates.endDate))) {
-                                hasProjects = true;
-                        isOverlapping = checkOverlapping(req, project[index].requests);
-                        if (isOverlapping) {
-                            console.log("MEMBER OVERLAP");
-                            break;
-                        } else {
-                            requestAfterAddLeave(req, project[index]);
-                        }
-                    } else if (isMember(req.employee.userkey, project[index].members) &&
-                        (moment(req.request.endDate).isSameOrAfter(project[index].schedule.dates.startDate) &&
-                            moment(req.request.endDate).isSameOrBefore(project[index].schedule.dates.endDate) &&
-                            moment(req.request.startDate).isBefore(project[index].schedule.dates.endDate))) {
-                                hasProjects = true;
-                        isOverlapping = checkOverlapping(req, project[index].requests);
-                        if (isOverlapping) {
-                            console.log("MEMBER OVERLAP");
-                            break;
-                        } else {
-                            requestBeforeAddLeave(req, project[index]);
-                        }
-                    } else {
-                        if (index === (project.length - 1)) {
-                            console.log("HAS NO PROJECTS");
-                            hasNoProjects = true;
-                            break;
-                        }
+            if (req.employee.files.assigned.isAssigned) {
+                hasProjects = true;
+                var myproject;
+                for (project in req.projects) {
+                    if (req.projects[project].projectkey === req.employee.files.assigned.projectkey) {
+                        myproject = req.projects[project]
+                        break;
                     }
-                } catch (err) {
-                    console.log(err.message);
-                    console.log("No project leaders for this project yet");
+                }
+                isOverlapping = checkOverlapping(req, myproject.requests);
+                if (isOverlapping) {
+                    console.log("ADMIN OVERLAP");
+                } else {
+                    requestRegularAddLeave(req, myproject);
+
+                    var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                    var notifRef = admin.database(leavedb).ref(database.main + database.notifications.leaves);
+                    var notificationKey = notifRef.push().key;
+                    notifRef.child(notificationKey).update(crypto.encrypt({
+                        employee: req.employee,
+                        key: notificationKey,
+                        time: time,
+                        seen: false,
+                        message: req.employee.email + " requested a leave to a project leader",
+                        icon: "priority_high"
+                    }));
                 }
             }
             if (!hasProjects) {
@@ -335,7 +186,19 @@ module.exports = {
                             status: "Forwarded to HR",
                             time: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
                         },
-                        status: "Forwaded to HR"
+                        status: "Forwarded to HR"
+                    }));
+
+                    var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                    var notifRef = admin.database(leavedb).ref(database.main + database.notifications.leaves);
+                    var notificationKey = notifRef.push().key;
+                    notifRef.child(notificationKey).update(crypto.encrypt({
+                        employee: req.employee,
+                        key: notificationKey,
+                        time: time,
+                        seen: false,
+                        message: req.employee.email + " leave request forwarded to HR",
+                        icon: "priority_high"
                     }));
                 }
             }
@@ -345,18 +208,6 @@ module.exports = {
                     message: "Cannot file overlapping leave requests"
                 });
             } else {
-                var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
-                var notifRef = admin.database(leavedb).ref(database.main + database.notifications.leaves);
-                var notificationKey = notifRef.push().key;
-                notifRef.child(notificationKey).update(crypto.encrypt({
-                    employee: req.employee,
-                    key: notificationKey,
-                    time: time,
-                    seen: false,
-                    message: req.employee.email + " requested a leave to a project leader",
-                    icon: "priority_high"
-                }));
-
                 response.send({
                     success: "success",
                     message: "Request sent"
@@ -377,7 +228,7 @@ module.exports = {
         req.request.isAcceptedByPL = req.isAccepted;
         req.request.ackByPL = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
         req.request.time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
-        
+
         if (req.isAccepted) {
             req.request.status = "Forwarded to HR";
             var forwardedleaveref = admin.database(leavedb).ref(database.main + database.leaves);

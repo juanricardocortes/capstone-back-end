@@ -23,6 +23,7 @@ var applicant = require("./modules/applicant/applicant");
 var projects = require("./modules/projects/project");
 var leaves = require("./modules/leaves/leave");
 var secure = require("./modules/crypto/crypto");
+var exam = require("./modules/exam/exam");
 
 app.route(routes.auth.authOne).post(cors(), auth.authOne);
 app.route(routes.auth.authTwo).post(cors(), auth.authTwo);
@@ -31,6 +32,11 @@ app.route(routes.auth.cancelAuth).post(cors(), auth.cancelAuth);
 
 app.route("/api" + routes.crypto.encrypt).post(cors(), secure.encrypt);
 app.route("/api" + routes.crypto.decrypt).post(cors(), secure.decrypt);
+
+app.route(routes.exam.logApplicant).post(cors(), exam.logApplicant);
+app.route(routes.exam.addQuestion).post(cors(), exam.addQuestion);
+app.route(routes.exam.getQuestions).post(cors(), exam.getQuestions);
+app.route(routes.exam.submitExam).post(cors(), exam.submitExam);
 
 app.route(routes.middleware.validateToken).post(cors(), middleware.validateToken);
 secureRoutes.use(middleware.middleware);
@@ -60,6 +66,7 @@ secureRoutes.route(routes.projects.updateProject.members.slots.addSlot).post(cor
 secureRoutes.route(routes.projects.updateProject.members.slots.deleteSlot).post(cors(), projects.updateProject.members.slots.deleteSlot);
 
 secureRoutes.route(routes.projects.updateProject.members.addMembers).post(cors(), projects.updateProject.members.addMembers);
+secureRoutes.route(routes.projects.updateProject.members.removeMember).post(cors(), projects.updateProject.members.removeMember);
 secureRoutes.route(routes.projects.updateProject.members.updateMembers).post(cors(), projects.updateProject.members.updateMembers);
 
 secureRoutes.route(routes.projects.updateProject.schedule.dates.updateEndDate).post(cors(), projects.updateProject.schedule.dates.updateEndDate);
