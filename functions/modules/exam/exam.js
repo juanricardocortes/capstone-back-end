@@ -45,7 +45,7 @@ module.exports = {
                     isValid = true;
                     break;
                 }
-            }
+            }   
 
             if (isValid) {
                 response.send({
