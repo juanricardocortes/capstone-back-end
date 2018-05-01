@@ -154,7 +154,9 @@ module.exports = {
                     }
                 }
                 response.send({
-                    message: (employee.length - duplicateEmails.length) + " employee/s added",
+                    success: "success",
+                    // message: (employee.length - duplicateEmails.length) + " employee/s added",
+                    message: "Employee added",
                     duplicateEmails: duplicateEmails
                 });
             });

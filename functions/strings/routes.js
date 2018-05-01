@@ -4,7 +4,8 @@ module.exports = {
         authTwo: "/api/authTwo",
         forgotPassword: "/api/forgotPassword",
         cancelAuth: "/api/cancelAuth",
-        changePassword: "/changePassword"
+        changePassword: "/changePassword",
+        initFirebase: "/initFirebase"
     },
     employee: {
         addEmployee: "/addEmployee",
@@ -25,6 +26,7 @@ module.exports = {
     },
     projects: {
         addProject: "/addProject",
+        endProject: "/endProject",
         updateProject: {
             updateProjectLead: "/updateProjectLead",
             members: {

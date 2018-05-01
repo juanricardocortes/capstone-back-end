@@ -86,6 +86,7 @@ function requestRegularAddLeave(req, project) {
             status: "Forwarded to project lead",
             time: moment().format("dddd, MMMM Do YYYY, h:mm:ss a")
         },
+        projectlead: project.projectlead.userkey,
         projectname: project.name,
         projectkey: project.projectkey
     }))
@@ -149,7 +150,11 @@ module.exports = {
                         break;
                     }
                 }
-                isOverlapping = checkOverlapping(req, myproject.requests);
+                try {
+                    isOverlapping = checkOverlapping(req, myproject.requests);
+                } catch (err) {
+                    isOverlapping = false;
+                }
                 if (isOverlapping) {
                     console.log("ADMIN OVERLAP");
                 } else {
@@ -169,13 +174,18 @@ module.exports = {
                 }
             }
             if (!hasProjects) {
-                isOverlapping = checkOverlappingNP(req, req.leaves);
+                try {
+                    isOverlapping = checkOverlappingNP(req, req.leaves);
+                } catch (err) {
+                    isOverlapping = false;
+                }
                 if (!isOverlapping) {
                     var forwardedleaveref = admin.database(leavedb).ref(database.main + database.leaves);
                     var key = forwardedleaveref.push().key;
                     forwardedleaveref.child(key).update(crypto.encrypt({
                         projectname: "Not assigned in any projects",
                         projectkey: "No project key",
+                        projectlead: "No project lead",
                         request: {
                             leavekey: key,
                             employee: req.employee,

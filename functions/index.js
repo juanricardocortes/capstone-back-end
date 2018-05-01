@@ -42,6 +42,7 @@ app.route(routes.middleware.validateToken).post(cors(), middleware.validateToken
 secureRoutes.use(middleware.middleware);
 
 secureRoutes.route(routes.auth.changePassword).post(cors(), auth.changePassword);
+secureRoutes.route(routes.auth.initFirebase).post(cors(), auth.initFirebase);
 
 secureRoutes.route(routes.employee.addEmployee).post(cors(), employee.addEmployee);
 secureRoutes.route(routes.employee.archiveEmployee).post(cors(), employee.archiveEmployee);
@@ -58,6 +59,7 @@ secureRoutes.route(routes.applicant.uploadApplicantImage).post(cors(), applicant
 secureRoutes.route(routes.applicant.updateRequirements).post(cors(), applicant.updateRequirements);
 
 secureRoutes.route(routes.projects.addProject).post(cors(), projects.addProject);
+secureRoutes.route(routes.projects.endProject).post(cors(), projects.endProject);
 secureRoutes.route(routes.projects.archiveProject).post(cors(), projects.archiveProject);
 
 secureRoutes.route(routes.projects.updateProject.updateProjectLead).post(cors(), projects.updateProject.updateProjectLead);

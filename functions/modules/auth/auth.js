@@ -91,8 +91,13 @@ module.exports = {
                 admin.database(authdb).ref(database.main + database.employees + crypto.decryptVar(user.userkey)).update({
                     pin: null
                 }).then(function () {
-                    var signature = lodash.omit(crypto.decrypt(snapshot.val()), ['pin', 'isAdmin', 'isArchived', 'files', 'password']);
-                    var token = jwt.sign(user, (JSON.stringify(signature) + process.env.SECRET_KEY), {
+                    var jsonSignature = lodash.omit(crypto.decrypt(snapshot.val()), ['pin', 'isAdmin', 'isArchived', 'files', 'password']);
+                    var stringSignature = JSON.stringify({
+                        email: jsonSignature.email,
+                        userkey: jsonSignature.userkey
+                    });
+                    // console.log("MY SIGNATURE: " + stringSignature + process.env.SECRET_KEY);
+                    var token = jwt.sign(user, (stringSignature + process.env.SECRET_KEY), {
                         expiresIn: '1d'
                     });
                     response.send({
@@ -186,5 +191,17 @@ module.exports = {
             message: "Password changed",
             success: "success"
         });
+    },
+    initFirebase: function (request, response) {
+        response.send({
+            config: {
+                apiKey: "AIzaSyBUclDY2R3cmoL_Z8cHgOhf_U-W5i1-Dno",
+                authDomain: "hrmsbot.firebaseapp.com",
+                databaseURL: "https://hrmsbot.firebaseio.com",
+                projectId: "hrmsbot",
+                storageBucket: "hrmsbot.appspot.com",
+                messagingSenderId: "202786007602"
+              }
+        })
     }
 }

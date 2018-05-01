@@ -12,6 +12,7 @@ module.exports = {
                 email: jsonSignature.email,
                 userkey: jsonSignature.userkey
             });
+            // console.log("MY SIGNATURE: " + stringSignature + process.env.SECRET_KEY);
             jwt.verify(token, (stringSignature + process.env.SECRET_KEY), function (err, decode) {
                 if (err) {
                     console.log(err.message);
@@ -54,5 +55,8 @@ module.exports = {
                 valid: false
             });
         }
+    },
+    invalidateToken: function(request, response) {
+
     }
 }

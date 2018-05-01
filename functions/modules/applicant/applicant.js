@@ -279,7 +279,7 @@ module.exports = {
                 status: status,
                 completion: completion,
                 totalRequirements: reqlength;
-            }
+            }       
         */
         var req = request.body;
         var decoded = jwt.decode(request.body.token);

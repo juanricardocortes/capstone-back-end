@@ -79,6 +79,55 @@ function getShifts(shifts) {
 }
 
 module.exports = {
+    endProject: function (request, response) {
+        var decoded = jwt.decode(request.body.token);
+        var req = request.body;
+        if (decoded.isAdmin) {
+            admin.database(projdb).ref(database.main + database.projects + req.project.projectkey + database.project.schedule + database.project.dates).update(crypto.encrypt({
+                endDate: moment().format('YYYY-MM-DD')
+            }));
+            try {
+                admin.database(projdb).ref(database.main + database.employees + req.project.projectlead.userkey + database.employee.information + database.employee.projects + req.project.projectkey + database.employee.dates).update(crypto.encrypt({
+                    endDate: moment().format('YYYY-MM-DD')
+                }));
+                admin.database(projdb).ref(database.main + database.employees + req.project.projectlead.userkey + database.employee.information + database.employee.assigned).update(crypto.encrypt({
+                    isAssigned: false
+                }));
+                admin.database(projdb).ref(database.main + database.projects + req.project.projectkey).update({
+                    projectlead: null
+                });
+            } catch (err) {}
+            try {
+                for (var slot in req.project.slots) {
+                    admin.database(projdb).ref(database.main + database.projects + req.project.projectkey + database.project.slots + slot).update({
+                        currentholder: null
+                    })
+                }
+            } catch (err) {}
+            try {
+                for (var member in req.project.members) {
+                    admin.database(projdb).ref(database.main + database.employees + member + database.employee.information + database.employee.projects + req.project.projectkey + database.employee.dates).update(crypto.encrypt({
+                        endDate: moment().format('YYYY-MM-DD')
+                    }));
+                    admin.database(projdb).ref(database.main + database.employees + member + database.employee.information + database.employee.assigned).update(crypto.encrypt({
+                        isAssigned: false
+                    }));
+                }
+                admin.database(database.main + database.projects + req.project.projectkey).update({
+                    members: null
+                })
+            } catch (err) {}
+            response.send({
+                success: "success",
+                message: "Project ended"
+            });
+        } else {
+            response.send({
+                success: "error",
+                message: "Unauthorized access!"
+            });
+        }
+    },
     addProject: function (request, response) {
         /* 
             {
@@ -366,6 +415,21 @@ module.exports = {
                     admin.database(projdb).ref(database.main + database.employees + req.employee.userkey + database.employee.information + database.employee.projects + req.projectkey + database.employee.dates).update(crypto.encrypt({
                         endDate: moment().format('YYYY-MM-DD')
                     }))
+
+                    var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                    var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
+                    var notificationKey = notifRef.push().key;
+                    notifRef.child(notificationKey).update(crypto.encrypt({
+                        project: {
+                            name: req.projectname,
+                            projectkey: req.projectkey
+                        },
+                        key: notificationKey,
+                        time: time,
+                        seen: false,
+                        message: "Removed " + req.employee.files.lastname + ",  " + req.employee.files.firstname + " in " + req.projectname,
+                        icon: "priority_high"
+                    }));
                     response.send({
                         message: req.employee.files.lastname + " removed",
                         success: "success"
@@ -453,6 +517,7 @@ module.exports = {
                                 projectName: req.project.name,
                                 projectLead: req.project.projectlead.userkey,
                                 shiftdetails: req.slot.shiftdetails,
+                                remarks: "none",
                                 dates: {
                                     startDate: moment().format('YYYY-MM-DD')
                                 },
