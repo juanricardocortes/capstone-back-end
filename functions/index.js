@@ -70,6 +70,7 @@ secureRoutes.route(routes.projects.updateProject.members.slots.deleteSlot).post(
 secureRoutes.route(routes.projects.updateProject.members.addMembers).post(cors(), projects.updateProject.members.addMembers);
 secureRoutes.route(routes.projects.updateProject.members.removeMember).post(cors(), projects.updateProject.members.removeMember);
 secureRoutes.route(routes.projects.updateProject.members.updateMembers).post(cors(), projects.updateProject.members.updateMembers);
+secureRoutes.route(routes.projects.updateProject.members.flagMember).post(cors(), projects.updateProject.members.flagMember);
 
 secureRoutes.route(routes.projects.updateProject.schedule.dates.updateEndDate).post(cors(), projects.updateProject.schedule.dates.updateEndDate);
 secureRoutes.route(routes.projects.updateProject.schedule.dates.updateStartDate).post(cors(), projects.updateProject.schedule.dates.updateStartDate);

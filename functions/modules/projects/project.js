@@ -273,6 +273,7 @@ module.exports = {
                         isProjectLead: true,
                         projectName: request.body.project.name,
                         projectKey: request.body.projectkey,
+                        remarks: "Project leader",
                         dates: {
                             startDate: moment().format('YYYY-MM-DD')
                         },
@@ -399,6 +400,23 @@ module.exports = {
                                 message: "Project not found"
                             })
                         })
+                }
+            },
+            flagMember: function (request, response) {
+                var req = request.body;
+                if(req.user.userkey === req.project.projectlead.userkey) {
+                    admin.database(projdb).ref(database.main + database.employees + req.commend.userkey + database.employee.information + database.employee.projects + req.project.projectkey).update(crypto.encrypt({
+                        remarks: req.remarks
+                    }))
+                    response.send({
+                        success: "success",
+                        message: req.commend.files.lastname + ", " + req.commend.files.firstname + " commended."
+                    })
+                } else {
+                    response.send({
+                        success: "error",
+                        message: "Unauthorized access!"
+                    })
                 }
             },
             removeMember: function (request, response) {
@@ -743,9 +761,7 @@ module.exports = {
                         });
 
                 },
-                updateShift: function (request, response) {
-
-                }
+                updateShift: function (request, response) {}
             }
         }
     }

@@ -36,7 +36,8 @@ module.exports = {
                 },
                 addMembers: "/addMembers",
                 removeMember: "/removeMember",
-                updateMembers: "/updateMembers"
+                updateMembers: "/updateMembers",
+                flagMember: "/flagMember"
             },
             schedule: {
                 shift: {
