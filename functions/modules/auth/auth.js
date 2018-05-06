@@ -92,7 +92,7 @@ module.exports = {
     },
     authTwo: function (request, response) {
         var req = request.body;
-        if (req.pin.includes("<") || req.pin.email.includes(">")){
+        if (req.pin.includes("<") || req.pin.includes(">")){
             response.send({
                 success: "error",
                 message: "Dangerous substring found!"
