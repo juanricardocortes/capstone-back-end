@@ -172,10 +172,10 @@ module.exports = {
                     var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                     var notificationKey = notifRef.push().key;
                     notifRef.child(notificationKey).update(crypto.encrypt({
-                        project: {
-                            name: project.name,
-                            projectkey: key
-                        },
+                        // project: {
+                        //     name: project.name,
+                        //     projectkey: key
+                        // },
                         key: notificationKey,
                         time: time,
                         seen: false,
@@ -220,10 +220,10 @@ module.exports = {
                 var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                 var notificationKey = notifRef.push().key;
                 notifRef.child(notificationKey).update(crypto.encrypt({
-                    project: {
-                        name: projects[index].name,
-                        projectkey: projects[index].projectkey
-                    },
+                    // project: {
+                    //     name: projects[index].name,
+                    //     projectkey: projects[index].projectkey
+                    // },
                     key: notificationKey,
                     time: time,
                     seen: false,
@@ -292,10 +292,10 @@ module.exports = {
                 var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                 var notificationKey = notifRef.push().key;
                 notifRef.child(notificationKey).update(crypto.encrypt({
-                    project: {
-                        name: request.body.project.name,
-                        projectkey: request.body.projectkey
-                    },
+                    // project: {
+                    //     name: request.body.project.name,
+                    //     projectkey: request.body.projectkey
+                    // },
                     key: notificationKey,
                     time: time,
                     seen: false,
@@ -350,10 +350,10 @@ module.exports = {
                         var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                         var notificationKey = notifRef.push().key;
                         notifRef.child(notificationKey).update(crypto.encrypt({
-                            project: {
-                                name: req.project.name,
-                                projectkey: req.project.projectkey
-                            },
+                            // project: {
+                            //     name: req.project.name,
+                            //     projectkey: req.project.projectkey
+                            // },
                             key: notificationKey,
                             time: time,
                             seen: false,
@@ -438,10 +438,10 @@ module.exports = {
                     var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                     var notificationKey = notifRef.push().key;
                     notifRef.child(notificationKey).update(crypto.encrypt({
-                        project: {
-                            name: req.projectname,
-                            projectkey: req.projectkey
-                        },
+                        // project: {
+                        //     name: req.projectname,
+                        //     projectkey: req.projectkey
+                        // },
                         key: notificationKey,
                         time: time,
                         seen: false,
@@ -552,10 +552,10 @@ module.exports = {
                                 var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                                 var notificationKey = notifRef.push().key;
                                 notifRef.child(notificationKey).update(crypto.encrypt({
-                                    project: {
-                                        name: req.project.name,
-                                        projectkey: req.project.projectkey
-                                    },
+                                    // project: {
+                                    //     name: req.project.name,
+                                    //     projectkey: req.project.projectkey
+                                    // },
                                     key: notificationKey,
                                     time: time,
                                     seen: false,
@@ -735,10 +735,10 @@ module.exports = {
                                     var notifRef = admin.database(projdb).ref(database.main + database.notifications.projects);
                                     var notificationKey = notifRef.push().key;
                                     notifRef.child(notificationKey).update(crypto.encrypt({
-                                        project: {
-                                            name: req.project.name,
-                                            projectkey: req.project.projectkey
-                                        },
+                                        // project: {
+                                        //     name: req.project.name,
+                                        //     projectkey: req.project.projectkey
+                                        // },
                                         key: notificationKey,
                                         time: time,
                                         seen: false,

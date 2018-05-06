@@ -164,7 +164,7 @@ module.exports = {
                     var notifRef = admin.database(leavedb).ref(database.main + database.notifications.leaves);
                     var notificationKey = notifRef.push().key;
                     notifRef.child(notificationKey).update(crypto.encrypt({
-                        employee: req.employee,
+                        // employee: req.employee,
                         key: notificationKey,
                         time: time,
                         seen: false,
@@ -203,7 +203,7 @@ module.exports = {
                     var notifRef = admin.database(leavedb).ref(database.main + database.notifications.leaves);
                     var notificationKey = notifRef.push().key;
                     notifRef.child(notificationKey).update(crypto.encrypt({
-                        employee: req.employee,
+                        // employee: req.employee,
                         key: notificationKey,
                         time: time,
                         seen: false,
@@ -260,7 +260,7 @@ module.exports = {
             var notifRef = admin.database(leavedb).ref(database.main + database.notifications.leaves);
             var notificationKey = notifRef.push().key;
             notifRef.child(notificationKey).update(crypto.encrypt({
-                employee: req.request.employee,
+                // employee: req.request.employee,
                 key: notificationKey,
                 time: time,
                 seen: false,
@@ -293,7 +293,7 @@ module.exports = {
             var notifRef = admin.database(leavedb).ref(database.main + database.notifications.leaves);
             var notificationKey = notifRef.push().key;
             notifRef.child(notificationKey).update(crypto.encrypt({
-                employee: req.request.employee,
+                // employee: req.request.employee,
                 key: notificationKey,
                 time: time,
                 seen: false,
@@ -348,7 +348,7 @@ module.exports = {
                 var notifRef = admin.database(leavedb).ref(database.main + database.notifications.leaves);
                 var notificationKey = notifRef.push().key;
                 notifRef.child(notificationKey).update(crypto.encrypt({
-                    employee: req.leave.request.employee,
+                    // employee: req.leave.request.employee,
                     key: notificationKey,
                     time: time,
                     seen: false,
@@ -384,7 +384,7 @@ module.exports = {
             var notifRef = admin.database(leavedb).ref(database.main + database.notifications.leaves);
             var notificationKey = notifRef.push().key;
             notifRef.child(notificationKey).update(crypto.encrypt({
-                employee: req.leave.request.employee,
+                // employee: req.leave.request.employee,
                 key: notificationKey,
                 time: time,
                 seen: false,

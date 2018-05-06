@@ -144,7 +144,7 @@ module.exports = {
                         var notifRef = admin.database(empdb).ref(database.main + database.notifications.employees);
                         var notificationKey = notifRef.push().key;
                         notifRef.child(notificationKey).update(crypto.encrypt({
-                            employee: employee[index],
+                            // employee: employee[index],
                             key: notificationKey,
                             time: time,
                             seen: false,
@@ -184,7 +184,7 @@ module.exports = {
                 var notifRef = admin.database(empdb).ref(database.main + database.notifications.employees);
                 var notificationKey = notifRef.push().key;
                 notifRef.child(notificationKey).update(crypto.encrypt({
-                    employee: employees[index],
+                    // employee: employees[index],
                     key: notificationKey,
                     time: time,
                     seen: false,

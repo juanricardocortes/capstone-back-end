@@ -154,7 +154,7 @@ module.exports = {
                         var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
                         var notificationKey = notifRef.push().key;
                         notifRef.child(notificationKey).update(crypto.encrypt({
-                            applicant: applicant[index],
+                            // applicant: applicant[index],
                             key: notificationKey,
                             time: time,
                             seen: false,
@@ -199,7 +199,7 @@ module.exports = {
                 var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
                 var notificationKey = notifRef.push().key;
                 notifRef.child(notificationKey).update(crypto.encrypt({
-                    applicant: applicants[index],
+                    // applicant: applicants[index],
                     key: notificationKey,
                     time: time,
                     seen: false,
@@ -227,7 +227,7 @@ module.exports = {
             var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
             var notificationKey = notifRef.push().key;
             notifRef.child(notificationKey).update({
-                applicant: request.body.user,
+                // applicant: request.body.user,
                 key: notificationKey,
                 time: time,
                 seen: false,
@@ -299,7 +299,7 @@ module.exports = {
             var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
             var notificationKey = notifRef.push().key;
             notifRef.child(notificationKey).update(crypto.encrypt({
-                applicant: req.applicant,
+                // applicant: req.applicant,
                 key: notificationKey,
                 time: time,
                 seen: false,
