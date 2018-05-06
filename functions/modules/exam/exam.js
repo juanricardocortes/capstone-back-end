@@ -34,34 +34,39 @@ function containsObject(obj, list) {
 
 module.exports = {
     logApplicant: function (request, response) {
-
         var req = request.body;
-
-        admin.database(exdb).ref(database.main + database.applicants).once("value").then(function (snapshot) {
-            var applicants = iterate([snapshot.val()]);
-            var isValid = false;
-            for (var index = 0; index < applicants.length; index++) {
-                if ((!crypto.decryptVar(applicants[index].tookExam)) && (applicants[index].email === crypto.encryptVar(req.email)) && (applicants[index].referenceNumber === crypto.encryptVar(parseInt(req.refnum)))) {
-                    isValid = true;
-                    break;
+        if(req.email.includes("<") || req.email.includes(">") || req.refnum.includes("<") || req.refnum.includes(">")) {
+            response.send({
+                success: "error",
+                message: "Dangerous substring found!"
+            })
+        } else {
+            admin.database(exdb).ref(database.main + database.applicants).once("value").then(function (snapshot) {
+                var applicants = iterate([snapshot.val()]);
+                var isValid = false;
+                for (var index = 0; index < applicants.length; index++) {
+                    if ((!crypto.decryptVar(applicants[index].tookExam)) && (applicants[index].email === crypto.encryptVar(req.email)) && (applicants[index].referenceNumber === crypto.encryptVar(parseInt(req.refnum)))) {
+                        isValid = true;
+                        break;
+                    }
+                }   
+    
+                if (isValid) {
+                    response.send({
+                        applicant: crypto.decrypt(applicants[index]),
+                        message: "Taking you to exam page",
+                        success: "success",
+                        isValid: true
+                    })
+                } else {
+                    response.send({
+                        message: "Not taking you to exam page",
+                        success: "error",
+                        isValid: false
+                    })
                 }
-            }   
-
-            if (isValid) {
-                response.send({
-                    applicant: crypto.decrypt(applicants[index]),
-                    message: "Taking you to exam page",
-                    success: "success",
-                    isValid: true
-                })
-            } else {
-                response.send({
-                    message: "Not taking you to exam page",
-                    success: "error",
-                    isValid: false
-                })
-            }
-        });
+            });
+        }
     },
     addQuestion: function (request, response) {
         var req = request.body;
@@ -92,7 +97,6 @@ module.exports = {
         })
     },
     submitExam: function (request, response) {
-        
         var req = request.body;
         admin.database(exdb).ref(database.main + database.applicants + req.applicant.userkey).update(crypto.encrypt({
             tookExam: true,
