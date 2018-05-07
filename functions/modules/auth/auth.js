@@ -196,24 +196,31 @@ module.exports = {
     },
     changePassword: function (request, response) {
         var req = request.body;
-        admin.database(authdb).ref(database.main + database.employees + req.user.userkey).update(crypto.encrypt({
-            password: req.newPassword
-        }));
-        
-        admin.auth(authdb).updateUser(req.firebaseUser.uid, {
-                password: req.newPassword
-            })
-            .then(function (userRecord) {
-                // See the UserRecord reference doc for the contents of userRecord.
-                // console.log("Successfully updated user", userRecord.toJSON());
-            })
-            .catch(function (error) {
-                // console.log("Error updating user:", error);
+        if(req.newPassword.length < 8) {
+            response.send({
+                message: "Password must be atleast 8 characters",
+                success: "error"
             });
-        response.send({
-            message: "Password changed",
-            success: "success"
-        });
+        } else {
+            admin.database(authdb).ref(database.main + database.employees + req.user.userkey).update(crypto.encrypt({
+                password: req.newPassword
+            }));
+            
+            admin.auth(authdb).updateUser(req.firebaseUser.uid, {
+                    password: req.newPassword
+                })
+                .then(function (userRecord) {
+                    // See the UserRecord reference doc for the contents of userRecord.
+                    // console.log("Successfully updated user", userRecord.toJSON());
+                })
+                .catch(function (error) {
+                    // console.log("Error updating user:", error);
+                });
+            response.send({
+                message: "Password changed",
+                success: "success"
+            });
+        }
     },
     initFirebase: function (request, response) {
         response.send({

@@ -86,20 +86,20 @@ secureRoutes.route(routes.leaves.acknowledgeLeave).post(cors(), leaves.acknowled
 secureRoutes.route(routes.crypto.encrypt).post(cors(), secure.encrypt);
 secureRoutes.route(routes.crypto.decrypt).post(cors(), secure.decrypt);
 
-// app.listen(port, address);
-// console.log("API Connected on " + address + ":" + port);
+app.listen(port, address);
+console.log("API Connected on " + address + ":" + port);
 
-// var rl = require("readline").createInterface({
-//     input: process.stdin,
-//     output: process.stdout
-// });
-// rl.on("SIGINT", function () {
-//     process.emit("SIGINT");
-// });
-// process.on("SIGINT", function () {
-//     //graceful shutdown
-//     console.log('Server closed')
-//     process.exit();
-// });
+var rl = require("readline").createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+rl.on("SIGINT", function () {
+    process.emit("SIGINT");
+});
+process.on("SIGINT", function () {
+    //graceful shutdown
+    console.log('Server closed')
+    process.exit();
+});
 
-module.exports.venus = functions.https.onRequest(app);
+// module.exports.venus = functions.https.onRequest(app);
