@@ -202,15 +202,17 @@ module.exports = {
         } 
     },
     updateEmployee: function (request, response) {
-        var user = request.body.user;
+        var user = request.body.employee;
         var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
-            admin.database(empdb).ref(database.main + database.employees + user.userkey).update(user);
+            admin.database(empdb).ref(database.main + database.employees + user.userkey).update(crypto.encrypt(user));
             response.send({
-                message: "Update successful"
+                success: "success",
+                message: "Employee updated"
             });
         } else {
             response.send({
+                success: "error",
                 message: "Unauthorized access"
             });
         }
