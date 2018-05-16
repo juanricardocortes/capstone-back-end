@@ -1,0 +1,13 @@
+[debug] [2018-05-10T17:33:02.560Z] ----------------------------------------------------------------------
+[debug] [2018-05-10T17:33:02.563Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\User\AppData\Roaming\npm\node_modules\firebase-tools\bin\firebase deploy
+[debug] [2018-05-10T17:33:02.563Z] CLI Version:   3.16.0
+[debug] [2018-05-10T17:33:02.564Z] Platform:      win32
+[debug] [2018-05-10T17:33:02.564Z] Node Version:  v8.9.3
+[debug] [2018-05-10T17:33:02.565Z] Time:          Fri May 11 2018 01:33:02 GMT+0800 (Malay Peninsula Standard Time)
+[debug] [2018-05-10T17:33:02.565Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-05-10T17:33:02.589Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-05-10T17:33:02.590Z] > authorizing via signed-in user
+[debug] [2018-05-10T17:33:02.593Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/hrmsbot  
+  
+ Fri May 11 2018 01:33:02 GMT+0800 (Malay Peninsula Standard Time)

@@ -221,7 +221,15 @@ module.exports = {
         var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
             admin.database(empdb).ref(database.main + database.employees).once("value").then(function (employees) {
-                response.send(iterate([employees.val()]));
+                response.send(crypto.decrypt({employees: iterate([employees.val()])}));
+            });
+        }
+    },
+    getEmployeeNotifications: function (request, response) {
+        var decoded = jwt.decode(request.body.token);
+        if (decoded.isAdmin) {
+            admin.database(empdb).ref(database.main + database.notifications.employees).once("value").then(function (employees) {
+                response.send(crypto.decrypt({employees: iterate([employees.val()])}));
             });
         }
     },

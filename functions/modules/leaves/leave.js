@@ -431,5 +431,21 @@ module.exports = {
                 message: "Leave declined"
             });
         }
+    },
+    getLeaves: function (request, response) {
+        var decoded = jwt.decode(request.body.token);
+        if (decoded.isAdmin) {
+            admin.database(leavedb).ref(database.main + database.leaves).once("value").then(function (leaves) {
+                response.send(crypto.decrypt({leaves: iterate([leaves.val()])}));
+            });
+        }
+    },
+    getLeaveNotifications: function (request, response) {
+        var decoded = jwt.decode(request.body.token);
+        if (decoded.isAdmin) {
+            admin.database(leavedb).ref(database.main + database.notifications.leaves).once("value").then(function (leaves) {
+                response.send(crypto.decrypt({leaves: iterate([leaves.val()])}));
+            });
+        }
     }
-}
+}   

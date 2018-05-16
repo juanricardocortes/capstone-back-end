@@ -764,5 +764,21 @@ module.exports = {
                 updateShift: function (request, response) {}
             }
         }
+    },
+    getProjects: function (request, response) {
+        var decoded = jwt.decode(request.body.token);
+        if (decoded.isAdmin) {
+            admin.database(projdb).ref(database.main + database.projects).once("value").then(function (project) {
+                response.send(crypto.decrypt({projects: iterate([project.val()])}));
+            });
+        }
+    },
+    getProjectNotifications: function (request, response) {
+        var decoded = jwt.decode(request.body.token);
+        if (decoded.isAdmin) {
+            admin.database(projdb).ref(database.main + database.notifications.projects).once("value").then(function (project) {
+                response.send(crypto.decrypt({projects: iterate([project.val()])}));
+            });
+        }
     }
 }

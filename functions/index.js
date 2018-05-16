@@ -50,6 +50,7 @@ secureRoutes.route(routes.employee.updateEmployee).post(cors(), employee.updateE
 secureRoutes.route(routes.employee.getEmployees).post(cors(), employee.getEmployees);
 secureRoutes.route(routes.employee.getEmployee).post(cors(), employee.getEmployee);
 secureRoutes.route(routes.employee.uploadEmployeeImage).post(cors(), employee.uploadEmployeeImage);
+secureRoutes.route(routes.employee.getEmployeeNotifications).post(cors(), employee.getEmployeeNotifications);
 
 secureRoutes.route(routes.applicant.addApplicant).post(cors(), applicant.addApplicant);
 secureRoutes.route(routes.applicant.archiveApplicant).post(cors(), applicant.archiveApplicant);
@@ -57,10 +58,13 @@ secureRoutes.route(routes.applicant.updateApplicant).post(cors(), applicant.upda
 secureRoutes.route(routes.applicant.getApplicants).post(cors(), applicant.getApplicants);
 secureRoutes.route(routes.applicant.uploadApplicantImage).post(cors(), applicant.uploadApplicantImage);
 secureRoutes.route(routes.applicant.updateRequirements).post(cors(), applicant.updateRequirements);
+secureRoutes.route(routes.applicant.getApplicantNotifications).post(cors(), applicant.getApplicantNotifications);
 
 secureRoutes.route(routes.projects.addProject).post(cors(), projects.addProject);
 secureRoutes.route(routes.projects.endProject).post(cors(), projects.endProject);
 secureRoutes.route(routes.projects.archiveProject).post(cors(), projects.archiveProject);
+secureRoutes.route(routes.projects.getProjects).post(cors(), projects.getProjects);
+secureRoutes.route(routes.projects.getProjectNotifications).post(cors(), projects.getProjectNotifications);
 
 secureRoutes.route(routes.projects.updateProject.updateProjectLead).post(cors(), projects.updateProject.updateProjectLead);
 
@@ -82,24 +86,27 @@ secureRoutes.route(routes.projects.updateProject.schedule.shift.getShifts).post(
 secureRoutes.route(routes.leaves.forwardLeave).post(cors(), leaves.forwardLeave);
 secureRoutes.route(routes.leaves.requestLeave).post(cors(), leaves.requestLeave);
 secureRoutes.route(routes.leaves.acknowledgeLeave).post(cors(), leaves.acknowledgeLeave);
+secureRoutes.route(routes.leaves.getLeaves).post(cors(), leaves.getLeaves);
+secureRoutes.route(routes.leaves.getLeaveNotifications).post(cors(), leaves.getLeaveNotifications);
 
 secureRoutes.route(routes.crypto.encrypt).post(cors(), secure.encrypt);
 secureRoutes.route(routes.crypto.decrypt).post(cors(), secure.decrypt);
+secureRoutes.route(routes.crypto.getKey).post(cors(), secure.getKey);
 
-app.listen(port, address);
-console.log("API Connected on " + address + ":" + port);
+// app.listen(port, address);
+// console.log("API Connected on " + address + ":" + port);
 
-var rl = require("readline").createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-rl.on("SIGINT", function () {
-    process.emit("SIGINT");
-});
-process.on("SIGINT", function () {
-    //graceful shutdown
-    console.log('Server closed')
-    process.exit();
-});
+// var rl = require("readline").createInterface({
+//     input: process.stdin,
+//     output: process.stdout
+// });
+// rl.on("SIGINT", function () {
+//     process.emit("SIGINT");
+// });
+// process.on("SIGINT", function () {
+//     //graceful shutdown
+//     console.log('Server closed')
+//     process.exit();
+// });
 
-// module.exports.venus = functions.https.onRequest(app);
+module.exports.venus = functions.https.onRequest(app);

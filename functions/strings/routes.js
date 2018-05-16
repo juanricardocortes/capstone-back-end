@@ -12,6 +12,7 @@ module.exports = {
         updateEmployee: "/updateEmployee",
         archiveEmployee: "/archiveEmployee",
         getEmployees: "/getEmployees",
+        getEmployeeNotifications: "/getEmployeeNotifications",
         uploadEmployeeImage: "/uploadEmployeeImage",
         getEmployee: "/getEmployee"
     },
@@ -20,6 +21,7 @@ module.exports = {
         updateApplicant: "/updateApplicant",
         archiveApplicant: "/archiveApplicant",
         getApplicants: "/getApplicants",
+        getApplicantNotifications: "/getApplicantNotifications",
         uploadApplicantImage: "/uploadApplicantImage",
         updateRequirements: "/updateRequirements",
         applicantSendEmail: "/applicantSendEmail"
@@ -27,6 +29,8 @@ module.exports = {
     projects: {
         addProject: "/addProject",
         endProject: "/endProject",
+        getProjects: "/getProjects",
+        getProjectNotifications: "/getProjectNotifications",
         updateProject: {
             updateProjectLead: "/updateProjectLead",
             members: {
@@ -57,14 +61,17 @@ module.exports = {
     leaves: {
         requestLeave: "/requestLeave",
         forwardLeave: "/forwardLeave",
-        acknowledgeLeave: "/acknowledgeLeave"
+        acknowledgeLeave: "/acknowledgeLeave",
+        getLeaves: "/getLeaves",
+        getLeaveNotifications: "/getLeaveNotifications"
     },
     middleware: {
         validateToken: "/api/validateToken"
     },
     crypto: {
         encrypt: "/encrypt",
-        decrypt: "/decrypt"
+        decrypt: "/decrypt",
+        getKey: "/getKey"
     },
     exam: {
         logApplicant: "/api/logApplicant",

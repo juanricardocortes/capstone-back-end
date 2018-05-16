@@ -190,7 +190,7 @@ module.exports = {
                     isArchived: (applicants[index].isArchived)
                 }));
                 var message = "";
-                if(applicants[index].isArchived){
+                if (applicants[index].isArchived) {
                     message = "Archived"
                 } else {
                     message = "Unarchived"
@@ -244,14 +244,6 @@ module.exports = {
             });
         }
     },
-    getApplicants: function (request, response) {
-        var decoded = jwt.decode(request.body.token);
-        if (decoded.isAdmin) {
-            admin.database(appdb).ref(database.main + database.applicants).once("value").then(function (applicants) {
-                response.send(iterate([applicants.val()]));
-            })
-        }
-    },
     uploadApplicantImage: function (request, response) {
         try {
             admin.database(appdb).ref(database.main + database.applicants + request.body.userkey).update(crypto.encrypt({
@@ -284,36 +276,62 @@ module.exports = {
         var req = request.body;
         var decoded = jwt.decode(request.body.token);
         if (decoded.isAdmin) {
-            var newCompletion = Math.ceil(req.completion + ((1 / (req.totalRequirements)) * 100));
-            if(newCompletion > 100) {
-                newCompletion = 100;
-            }
-            admin.database(appdb).ref(database.main + database.applicants + req.applicantKey + database.applicant.requirements + req.requirementKey).update(crypto.encrypt({
-                    status: req.status
-                }));
-            admin.database(appdb).ref(database.main + database.applicants + req.applicantKey).update(crypto.encrypt({
-                completion: newCompletion
-            }));
+            admin.database(appdb).ref(database.main + database.applicants + req.applicantKey).once('value').then(function (applicant) {
+                var newCompletion = Math.ceil(crypto.decryptVar(applicant.val().completion) + ((1 / (req.totalRequirements)) * 100));
+                if (newCompletion > 100) {
+                    newCompletion = 100;
+                }
 
-            var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
-            var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
-            var notificationKey = notifRef.push().key;
-            notifRef.child(notificationKey).update(crypto.encrypt({
-                // applicant: req.applicant,
-                key: notificationKey,
-                time: time,
-                seen: false,
-                message: "Completed " + req.requirementName + ": " + req.applicant.email,
-                icon: "priority_high"
-            }));
-
-            response.send({
-                message: request.body.requirementName + " completed"
-            });
+                admin.database(appdb).ref(database.main + database.applicants + req.applicantKey).update(crypto.encrypt({
+                    completion: newCompletion
+                })).then(function (snapshot) {
+                    admin.database(appdb).ref(database.main + database.applicants + req.applicantKey + database.applicant.requirements + req.requirementKey).update(crypto.encrypt({
+                        status: req.status
+                    })).then(function (snapshot) {
+                        var time = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                        var notifRef = admin.database(appdb).ref(database.main + database.notifications.applicants);
+                        var notificationKey = notifRef.push().key;
+                        notifRef.child(notificationKey).update(crypto.encrypt({
+                            // applicant: req.applicant,
+                            key: notificationKey,
+                            time: time,
+                            seen: false,
+                            message: "Completed " + req.requirementName + ": " + req.applicant.email,
+                            icon: "priority_high"
+                        })).then(function(snapshot){
+                            response.send({
+                                success: "success",
+                                message: request.body.requirementName + " completed"
+                            });
+                        });
+                    });
+                });
+            })
         } else {
             response.send({
+                success: "success",
                 message: "Unauthorized access"
             })
+        }
+    },
+    getApplicants: function (request, response) {
+        var decoded = jwt.decode(request.body.token);
+        if (decoded.isAdmin) {
+            admin.database(appdb).ref(database.main + database.applicants).once("value").then(function (applicants) {
+                response.send(crypto.decrypt({
+                    applicants: iterate([applicants.val()])
+                }));
+            });
+        }
+    },
+    getApplicantNotifications: function (request, response) {
+        var decoded = jwt.decode(request.body.token);
+        if (decoded.isAdmin) {
+            admin.database(appdb).ref(database.main + database.notifications.applicants).once("value").then(function (applicants) {
+                response.send(crypto.decrypt({
+                    applicants: iterate([applicants.val()])
+                }));
+            });
         }
     }
 }
